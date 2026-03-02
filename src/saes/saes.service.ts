@@ -39,6 +39,7 @@ export class SaesService {
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
+        thematic: { select: { id: true, code: true, label: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -49,6 +50,8 @@ export class SaesService {
       imageBanner: sae.imageBanner,
       description: sae.description,
       semesterId: sae.semesterId,
+      thematicId: sae.thematicId,
+      thematic: sae.thematic,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
@@ -78,6 +81,7 @@ export class SaesService {
       where: { id, deletedAt: null },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
+        thematic: { select: { id: true, code: true, label: true } },
       },
     });
 
@@ -93,6 +97,8 @@ export class SaesService {
       imageBanner: sae.imageBanner,
       description: sae.description,
       semesterId: sae.semesterId,
+      thematicId: sae.thematicId,
+      thematic: sae.thematic,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
@@ -111,19 +117,26 @@ export class SaesService {
     });
     if (!semester) throw new NotFoundException('Semestre non trouvé');
 
+    const thematic = await this.prisma.thematic.findUnique({
+      where: { id: dto.thematicId },
+    });
+    if (!thematic) throw new NotFoundException('Thématique non trouvée');
+
     const sae = await this.prisma.sae.create({
       data: {
         title: dto.title,
         description: dto.description,
         semesterId: dto.semesterId,
+        thematicId: dto.thematicId,
         startDate: new Date(dto.startDate),
         dueDate: new Date(dto.dueDate),
         imageBanner: dto.imageBanner ?? null,
-        isPublished: false,
+        isPublished: dto.isPublished ?? false,
         createdById,
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
+        thematic: { select: { id: true, code: true, label: true } },
       },
     });
 
@@ -133,6 +146,8 @@ export class SaesService {
       imageBanner: sae.imageBanner,
       description: sae.description,
       semesterId: sae.semesterId,
+      thematicId: sae.thematicId,
+      thematic: sae.thematic,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
@@ -161,12 +176,20 @@ export class SaesService {
       this.validateDates(startDate, dueDate);
     }
 
+    if (dto.thematicId) {
+      const thematic = await this.prisma.thematic.findUnique({
+        where: { id: dto.thematicId },
+      });
+      if (!thematic) throw new NotFoundException('Thématique non trouvée');
+    }
+
     const updated = await this.prisma.sae.update({
       where: { id },
       data: {
         title: dto.title,
         description: dto.description,
         semesterId: dto.semesterId,
+        thematicId: dto.thematicId,
         startDate: dto.startDate ? new Date(dto.startDate) : undefined,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         imageBanner: dto.imageBanner,
@@ -174,6 +197,7 @@ export class SaesService {
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
+        thematic: { select: { id: true, code: true, label: true } },
       },
     });
 
@@ -183,6 +207,8 @@ export class SaesService {
       imageBanner: updated.imageBanner,
       description: updated.description,
       semesterId: updated.semesterId,
+      thematicId: updated.thematicId,
+      thematic: updated.thematic,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,
@@ -214,6 +240,7 @@ export class SaesService {
       data: { isPublished: true },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
+        thematic: { select: { id: true, code: true, label: true } },
       },
     });
 
@@ -223,6 +250,8 @@ export class SaesService {
       imageBanner: updated.imageBanner,
       description: updated.description,
       semesterId: updated.semesterId,
+      thematicId: updated.thematicId,
+      thematic: updated.thematic,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,

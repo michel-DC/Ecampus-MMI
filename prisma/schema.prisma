@@ -140,12 +140,14 @@ model Sae {
   imageBanner String?
   description String   @db.Text
   semesterId  String
+  thematicId  String
   createdById String
   startDate   DateTime
   dueDate     DateTime
   isPublished Boolean  @default(false)
 
   semester    Semester        @relation(fields: [semesterId], references: [id])
+  thematic    Thematic        @relation(fields: [thematicId], references: [id])
   createdBy   user            @relation(fields: [createdById], references: [id])
   invitations SaeInvitation[]
 
@@ -154,8 +156,18 @@ model Sae {
   deletedAt DateTime?
 
   @@index([semesterId])
+  @@index([thematicId])
   @@index([isPublished])
   @@index([dueDate])
+}
+
+model Thematic {
+  id    String @id @default(uuid())
+  code  String @unique
+  label String
+  saes  Sae[]
+
+  createdAt DateTime @default(now())
 }
 
 model SaeInvitation {

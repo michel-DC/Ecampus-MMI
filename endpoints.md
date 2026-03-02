@@ -25,6 +25,11 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
       "title": "SAE 2.01",
       "status": "ongoing",
       "isPublished": true,
+      "thematic": {
+        "id": "...",
+        "code": "DEVELOPPEMENT_WEB",
+        "label": "Développement Web"
+      },
       "createdBy": { "name": "Prof Martin", ... }
     }
   ],
@@ -51,6 +56,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
   "title": "Développement Web Moderne",
   "description": "Création d'une application complète avec NestJS et Prisma.",
   "semesterId": "ID_DU_SEMESTRE",
+  "thematicId": "ID_DE_LA_THEMATIQUE",
   "startDate": "2026-03-01T08:00:00Z",
   "dueDate": "2026-06-30T23:59:59Z",
   "imageBanner": "https://exemple.com/image.jpg"
@@ -67,6 +73,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 ```json
 {
   "title": "Nouveau titre de la SAE",
+  "thematicId": "NOUVEL_ID_THEMATIQUE",
   "isPublished": true
 }
 ```

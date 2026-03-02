@@ -5,13 +5,37 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Start seeding...');
 
-  // Nettoyage des données existantes (optionnel mais recommandé pour le seed)
+  // Nettoyage des données existantes
+  await prisma.saeInvitation.deleteMany();
+  await prisma.sae.deleteMany();
+  await prisma.thematic.deleteMany();
   await prisma.semester.deleteMany();
   await prisma.studentProfile.deleteMany();
   await prisma.group.deleteMany();
   await prisma.promotion.deleteMany();
 
-  // 1. Création des Promotions
+  // 1. Création des Thématiques
+  const thematicsData = [
+    { code: 'DEVELOPPEMENT_WEB', label: 'Développement Web' },
+    { code: 'UX_UI_DESIGN', label: 'UX/UI Design' },
+    { code: 'DESIGN_GRAPHIQUE', label: 'Design Graphique' },
+    { code: 'PRODUCTION_AUDIOVISUELLE', label: 'Production Audiovisuelle' },
+    { code: 'MOTION_DESIGN', label: 'Motion Design' },
+    { code: '3D', label: '3D' },
+    { code: 'COMMUNICATION_STRATEGIQUE', label: 'Communication Stratégique' },
+    { code: 'GESTION_DE_PROJET', label: 'Gestion de Projet' },
+    { code: 'DROIT_DU_NUMERIQUE', label: 'Droit du Numérique' },
+    { code: 'ECONOMIE_ET_ENTREPRENEURIAT', label: 'Économie et Entrepreneuriat' },
+  ];
+
+  for (const thematic of thematicsData) {
+    await prisma.thematic.create({
+      data: thematic,
+    });
+  }
+  console.log('✅ Thematics created');
+
+  // 2. Création des Promotions
   const mmi1 = await prisma.promotion.create({
     data: { label: 'MMI1', yearLevel: 1 },
   });
@@ -21,20 +45,18 @@ async function main() {
   const mmi3 = await prisma.promotion.create({
     data: { label: 'MMI3', yearLevel: 3 },
   });
-
   console.log('✅ Promotions created');
 
-  // 2. Création des Groupes (plus liés aux promotions)
+  // 3. Création des Groupes
   const groups = ['GROUPEA1', 'GROUPEA2', 'GROUPEB1', 'GROUPEB2'];
   for (const name of groups) {
     await prisma.group.create({
       data: { name },
     });
   }
-
   console.log('✅ Groups created');
 
-  // 3. Création des Semestres liés aux promotions
+  // 4. Création des Semestres liés aux promotions
   const semesters = [
     { number: 1, promotionId: mmi1.id },
     { number: 2, promotionId: mmi1.id },
@@ -49,8 +71,8 @@ async function main() {
       data: semester,
     });
   }
-
   console.log('✅ Semesters created');
+
   console.log('🌳 Seeding finished.');
 }
 

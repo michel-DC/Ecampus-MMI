@@ -6,12 +6,20 @@ export interface SaeAuthor {
   email: string;
 }
 
+export interface SaeThematic {
+  id: string;
+  code: string;
+  label: string;
+}
+
 export interface SaeResponse {
   id: string;
   title: string;
   imageBanner: string | null;
   description: string;
   semesterId: string;
+  thematicId: string;
+  thematic: SaeThematic;
   startDate: Date;
   dueDate: Date;
   isPublished: boolean;
