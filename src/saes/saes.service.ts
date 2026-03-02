@@ -22,10 +22,16 @@ import {
 export class SaesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findBanners(): Promise<any[]> {
+    return this.prisma.banner.findMany({
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async findAll(
     filters: SaeFiltersDto,
-    requestingUserId: string,
-    requestingUserRole: UserRole,
+    requestingUserId?: string,
+    requestingUserRole?: UserRole,
   ): Promise<SaeListResponse> {
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
@@ -40,6 +46,7 @@ export class SaesService {
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
+        banner: { select: { id: true, url: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -47,7 +54,8 @@ export class SaesService {
     const mapped: SaeResponse[] = saes.map((sae) => ({
       id: sae.id,
       title: sae.title,
-      imageBanner: sae.imageBanner,
+      bannerId: sae.bannerId,
+      banner: sae.banner,
       description: sae.description,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
@@ -70,8 +78,8 @@ export class SaesService {
 
   async findOne(
     id: string,
-    requestingUserId: string,
-    requestingUserRole: UserRole,
+    requestingUserId?: string,
+    requestingUserRole?: UserRole,
   ): Promise<SaeResponse> {
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
@@ -82,6 +90,7 @@ export class SaesService {
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
+        banner: { select: { id: true, url: true } },
       },
     });
 
@@ -94,7 +103,8 @@ export class SaesService {
     return {
       id: sae.id,
       title: sae.title,
-      imageBanner: sae.imageBanner,
+      bannerId: sae.bannerId,
+      banner: sae.banner,
       description: sae.description,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
@@ -122,28 +132,35 @@ export class SaesService {
     });
     if (!thematic) throw new NotFoundException('Thématique non trouvée');
 
+    const banner = await this.prisma.banner.findUnique({
+      where: { id: dto.bannerId },
+    });
+    if (!banner) throw new NotFoundException('Bannière non trouvée');
+
     const sae = await this.prisma.sae.create({
       data: {
         title: dto.title,
         description: dto.description,
         semesterId: dto.semesterId,
         thematicId: dto.thematicId,
+        bannerId: dto.bannerId,
         startDate: new Date(dto.startDate),
         dueDate: new Date(dto.dueDate),
-        imageBanner: dto.imageBanner ?? null,
         isPublished: dto.isPublished ?? false,
         createdById,
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
+        banner: { select: { id: true, url: true } },
       },
     });
 
     return {
       id: sae.id,
       title: sae.title,
-      imageBanner: sae.imageBanner,
+      bannerId: sae.bannerId,
+      banner: sae.banner,
       description: sae.description,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
@@ -183,6 +200,13 @@ export class SaesService {
       if (!thematic) throw new NotFoundException('Thématique non trouvée');
     }
 
+    if (dto.bannerId) {
+      const banner = await this.prisma.banner.findUnique({
+        where: { id: dto.bannerId },
+      });
+      if (!banner) throw new NotFoundException('Bannière non trouvée');
+    }
+
     const updated = await this.prisma.sae.update({
       where: { id },
       data: {
@@ -190,21 +214,23 @@ export class SaesService {
         description: dto.description,
         semesterId: dto.semesterId,
         thematicId: dto.thematicId,
+        bannerId: dto.bannerId,
         startDate: dto.startDate ? new Date(dto.startDate) : undefined,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
-        imageBanner: dto.imageBanner,
         isPublished: dto.isPublished,
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
+        banner: { select: { id: true, url: true } },
       },
     });
 
     return {
       id: updated.id,
       title: updated.title,
-      imageBanner: updated.imageBanner,
+      bannerId: updated.bannerId,
+      banner: updated.banner,
       description: updated.description,
       semesterId: updated.semesterId,
       thematicId: updated.thematicId,
@@ -241,13 +267,15 @@ export class SaesService {
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
+        banner: { select: { id: true, url: true } },
       },
     });
 
     return {
       id: updated.id,
       title: updated.title,
-      imageBanner: updated.imageBanner,
+      bannerId: updated.bannerId,
+      banner: updated.banner,
       description: updated.description,
       semesterId: updated.semesterId,
       thematicId: updated.thematicId,

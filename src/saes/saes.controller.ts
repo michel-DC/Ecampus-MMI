@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
 import { AuthGuard } from '../auth/guards/auth.guard';
+import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { OnboardingGuard } from '../auth/guards/onboarding.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -25,29 +26,38 @@ import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { SaeFiltersDto } from './dto/sae-filters.dto';
 
 @Controller('api/saes')
-@UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
 export class SaesController {
   constructor(private readonly saesService: SaesService) {}
 
+  @Get('banners')
+  @UseGuards(OptionalAuthGuard)
+  async getBanners(): Promise<any> {
+    const banners = await this.saesService.findBanners();
+    return { success: true, data: banners };
+  }
+
   @Get()
+  @UseGuards(OptionalAuthGuard)
   async findAll(
     @Query() filters: SaeFiltersDto,
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<any> {
-    const result = await this.saesService.findAll(filters, user.sub, user.role);
+    const result = await this.saesService.findAll(filters, user?.sub, user?.role);
     return { success: true, ...result };
   }
 
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   async findOne(
     @Param('id') id: string,
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<any> {
-    const result = await this.saesService.findOne(id, user.sub, user.role);
+    const result = await this.saesService.findOne(id, user?.sub, user?.role);
     return { success: true, data: result };
   }
 
   @Post()
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async create(
     @Body() dto: CreateSaeDto,
@@ -58,6 +68,7 @@ export class SaesController {
   }
 
   @Patch(':id')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async update(
     @Param('id') id: string,
@@ -69,6 +80,7 @@ export class SaesController {
   }
 
   @Post(':id/publish')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async publish(
     @Param('id') id: string,
@@ -79,7 +91,8 @@ export class SaesController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.OK) // Changé de NO_CONTENT à OK pour pouvoir renvoyer le body success: true
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async remove(
     @Param('id') id: string,
@@ -90,6 +103,7 @@ export class SaesController {
   }
 
   @Post(':id/invitations')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async createInvitation(
     @Param('id') id: string,
@@ -101,6 +115,7 @@ export class SaesController {
   }
 
   @Get(':id/invitations')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async findInvitations(
     @Param('id') id: string,

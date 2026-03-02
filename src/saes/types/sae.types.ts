@@ -12,10 +12,16 @@ export interface SaeThematic {
   label: string;
 }
 
+export interface SaeBanner {
+  id: string;
+  url: string;
+}
+
 export interface SaeResponse {
   id: string;
   title: string;
-  imageBanner: string | null;
+  bannerId: string;
+  banner: SaeBanner;
   description: string;
   semesterId: string;
   thematicId: string;

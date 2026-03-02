@@ -8,6 +8,7 @@ async function main() {
   // Nettoyage des données existantes
   await prisma.saeInvitation.deleteMany();
   await prisma.sae.deleteMany();
+  await prisma.banner.deleteMany();
   await prisma.thematic.deleteMany();
   await prisma.semester.deleteMany();
   await prisma.studentProfile.deleteMany();
@@ -35,7 +36,26 @@ async function main() {
   }
   console.log('✅ Thematics created');
 
-  // 2. Création des Promotions
+  // 2. Création des Bannières
+  const bannersData = [
+    'https://i.pinimg.com/1200x/ed/94/eb/ed94ebdd0efc7287c494656e7731f018.jpg',
+    'https://i.pinimg.com/1200x/f8/db/1c/f8db1ce0ceed526da4d3283f4c4f1b81.jpg',
+    'https://i.pinimg.com/1200x/72/8c/4a/728c4abf711c48935b28236a2120a1e5.jpg',
+    'https://i.pinimg.com/1200x/9e/04/a6/9e04a6ea0ad7520b1faa48f93aa57988.jpg',
+    'https://i.pinimg.com/736x/5e/d9/a8/5ed9a8052fd4be135daa9c607a80258a.jpg',
+    'https://i.pinimg.com/1200x/f2/9f/7a/f29f7af6b35e675f2902acd33c7c6e17.jpg',
+    'https://i.pinimg.com/736x/00/dd/39/00dd39ffb231b590f3cbc00d3634ba03.jpg',
+    'https://i.pinimg.com/736x/1e/12/94/1e129492f8c32810e72f338475b4334f.jpg',
+  ];
+
+  for (const url of bannersData) {
+    await prisma.banner.create({
+      data: { url },
+    });
+  }
+  console.log('✅ Banners created');
+
+  // 3. Création des Promotions
   const mmi1 = await prisma.promotion.create({
     data: { label: 'MMI1', yearLevel: 1 },
   });
@@ -47,7 +67,7 @@ async function main() {
   });
   console.log('✅ Promotions created');
 
-  // 3. Création des Groupes
+  // 4. Création des Groupes
   const groups = ['GROUPEA1', 'GROUPEA2', 'GROUPEB1', 'GROUPEB2'];
   for (const name of groups) {
     await prisma.group.create({
@@ -56,7 +76,7 @@ async function main() {
   }
   console.log('✅ Groups created');
 
-  // 4. Création des Semestres liés aux promotions
+  // 5. Création des Semestres liés aux promotions
   const semesters = [
     { number: 1, promotionId: mmi1.id },
     { number: 2, promotionId: mmi1.id },

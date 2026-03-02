@@ -137,7 +137,7 @@ model Group {
 model Sae {
   id          String   @id @default(uuid())
   title       String
-  imageBanner String?
+  bannerId    String
   description String   @db.Text
   semesterId  String
   thematicId  String
@@ -148,6 +148,7 @@ model Sae {
 
   semester    Semester        @relation(fields: [semesterId], references: [id])
   thematic    Thematic        @relation(fields: [thematicId], references: [id])
+  banner      Banner          @relation(fields: [bannerId], references: [id])
   createdBy   user            @relation(fields: [createdById], references: [id])
   invitations SaeInvitation[]
 
@@ -157,8 +158,17 @@ model Sae {
 
   @@index([semesterId])
   @@index([thematicId])
+  @@index([bannerId])
   @@index([isPublished])
   @@index([dueDate])
+}
+
+model Banner {
+  id   String @id @default(uuid())
+  url  String @unique
+  saes Sae[]
+
+  createdAt DateTime @default(now())
 }
 
 model Thematic {

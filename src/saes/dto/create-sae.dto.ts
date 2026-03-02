@@ -22,15 +22,14 @@ export class CreateSaeDto {
   @IsUUID()
   thematicId: string;
 
+  @IsUUID()
+  bannerId: string;
+
   @IsDateString()
   startDate: string;
 
   @IsDateString()
   dueDate: string;
-
-  @IsString()
-  @IsOptional()
-  imageBanner?: string;
 
   @IsOptional()
   @IsBoolean({ message: 'Le champ isPublished doit être un booléen' })

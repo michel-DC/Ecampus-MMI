@@ -6,11 +6,30 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ## 🔐 Configuration Globale
 - **Base URL** : `/api/saes`
-- **Sécurité** : `AuthGuard`, `RolesGuard`, `OnboardingGuard` (toutes les routes nécessitent d'être connecté et d'avoir complété son onboarding pour les étudiants).
+- **Sécurité** : 
+    - Routes `GET /api/saes`, `GET /api/saes/:id` et `GET /api/saes/banners` : **Publiques** (accès sans connexion).
+    - Autres routes : `AuthGuard`, `RolesGuard`, `OnboardingGuard` (nécessitent d'être connecté et d'avoir complété son onboarding pour les étudiants).
 
 ---
 
-## 1. Liste des SAE
+## 1. Liste des Bannières (Public)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/banners`
+- **Description** : Récupère la liste des URLs de bannières prédéfinies pour les SAE.
+- **Exemple de réponse** :
+```json
+{
+  "success": true,
+  "data": [
+    { "id": "...", "url": "https://..." },
+    { "id": "...", "url": "https://..." }
+  ]
+}
+```
+
+---
+
+## 2. Liste des SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes`
 - **Rôle** : Tous
@@ -30,6 +49,10 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
         "code": "DEVELOPPEMENT_WEB",
         "label": "Développement Web"
       },
+      "banner": {
+        "id": "...",
+        "url": "https://..."
+      },
       "createdBy": { "name": "Prof Martin", ... }
     }
   ],
@@ -39,14 +62,14 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ---
 
-## 2. Détail d'une SAE
+## 3. Détail d'une SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:id`
-- **Rôle** : Tous (les étudiants ne voient que si `isPublished: true`)
+- **Rôle** : Tous (les utilisateurs non connectés ne voient que si `isPublished: true`)
 
 ---
 
-## 3. Créer une SAE
+## 4. Créer une SAE
 - **Méthode** : `POST`
 - **URL** : `/api/saes`
 - **Rôle** : `TEACHER`, `ADMIN`
@@ -57,15 +80,16 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
   "description": "Création d'une application complète avec NestJS et Prisma.",
   "semesterId": "ID_DU_SEMESTRE",
   "thematicId": "ID_DE_LA_THEMATIQUE",
+  "bannerId": "ID_DE_LA_BANNIERE",
   "startDate": "2026-03-01T08:00:00Z",
   "dueDate": "2026-06-30T23:59:59Z",
-  "imageBanner": "https://exemple.com/image.jpg"
+  "isPublished": false
 }
 ```
 
 ---
 
-## 4. Modifier une SAE
+## 5. Modifier une SAE
 - **Méthode** : `PATCH`
 - **URL** : `/api/saes/:id`
 - **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
@@ -73,6 +97,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 ```json
 {
   "title": "Nouveau titre de la SAE",
+  "bannerId": "NOUVEL_ID_BANNIERE",
   "thematicId": "NOUVEL_ID_THEMATIQUE",
   "isPublished": true
 }
@@ -80,7 +105,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ---
 
-## 5. Publier une SAE
+## 6. Publier une SAE
 - **Méthode** : `POST`
 - **URL** : `/api/saes/:id/publish`
 - **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
@@ -88,7 +113,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ---
 
-## 6. Supprimer une SAE
+## 7. Supprimer une SAE
 - **Méthode** : `DELETE`
 - **URL** : `/api/saes/:id`
 - **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
@@ -96,7 +121,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ---
 
-## 7. Inviter un Enseignant
+## 8. Inviter un Enseignant
 - **Méthode** : `POST`
 - **URL** : `/api/saes/:id/invitations`
 - **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
@@ -109,7 +134,7 @@ Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la ges
 
 ---
 
-## 8. Liste des Invitations
+## 9. Liste des Invitations
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:id/invitations`
 - **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
