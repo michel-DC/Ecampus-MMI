@@ -26,7 +26,7 @@ export class OnboardingGuard implements CanActivate {
 
     if (!studentProfile) {
       throw new ForbiddenException(
-        'Onboarding required before accessing this resource',
+        "Onboarding requis avant d'accéder à cette ressource'",
       );
     }
 

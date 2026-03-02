@@ -1,0 +1,343 @@
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserRole } from '@prisma/client';
+import { CreateSaeDto } from './dto/create-sae.dto';
+import { UpdateSaeDto } from './dto/update-sae.dto';
+import { CreateInvitationDto } from './dto/create-invitation.dto';
+import { SaeFiltersDto } from './dto/sae-filters.dto';
+import {
+  SaeInvitationResponse,
+  SaeListResponse,
+  SaeResponse,
+  computeSaeStatus,
+} from './types/sae.types';
+
+@Injectable()
+export class SaesService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findAll(
+    filters: SaeFiltersDto,
+    requestingUserId: string,
+    requestingUserRole: UserRole,
+  ): Promise<SaeListResponse> {
+    const isTeacherOrAdmin =
+      requestingUserRole === UserRole.TEACHER ||
+      requestingUserRole === UserRole.ADMIN;
+
+    const saes = await this.prisma.sae.findMany({
+      where: {
+        deletedAt: null,
+        semesterId: filters.semesterId,
+        isPublished: isTeacherOrAdmin ? filters.isPublished : true,
+      },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const mapped: SaeResponse[] = saes.map((sae) => ({
+      id: sae.id,
+      title: sae.title,
+      imageBanner: sae.imageBanner,
+      description: sae.description,
+      semesterId: sae.semesterId,
+      startDate: sae.startDate,
+      dueDate: sae.dueDate,
+      isPublished: sae.isPublished,
+      status: computeSaeStatus(sae),
+      createdBy: sae.createdBy,
+      createdAt: sae.createdAt,
+      updatedAt: sae.updatedAt,
+    }));
+
+    const filtered = filters.status
+      ? mapped.filter((sae) => sae.status === filters.status)
+      : mapped;
+
+    return { data: filtered, total: filtered.length };
+  }
+
+  async findOne(
+    id: string,
+    requestingUserId: string,
+    requestingUserRole: UserRole,
+  ): Promise<SaeResponse> {
+    const isTeacherOrAdmin =
+      requestingUserRole === UserRole.TEACHER ||
+      requestingUserRole === UserRole.ADMIN;
+
+    const sae = await this.prisma.sae.findUnique({
+      where: { id, deletedAt: null },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+
+    if (!sae.isPublished && !isTeacherOrAdmin) {
+      throw new ForbiddenException('Cette SAE n\'est pas encore publiée');
+    }
+
+    return {
+      id: sae.id,
+      title: sae.title,
+      imageBanner: sae.imageBanner,
+      description: sae.description,
+      semesterId: sae.semesterId,
+      startDate: sae.startDate,
+      dueDate: sae.dueDate,
+      isPublished: sae.isPublished,
+      status: computeSaeStatus(sae),
+      createdBy: sae.createdBy,
+      createdAt: sae.createdAt,
+      updatedAt: sae.updatedAt,
+    };
+  }
+
+  async create(dto: CreateSaeDto, createdById: string): Promise<SaeResponse> {
+    this.validateDates(dto.startDate, dto.dueDate);
+
+    const semester = await this.prisma.semester.findUnique({
+      where: { id: dto.semesterId },
+    });
+    if (!semester) throw new NotFoundException('Semestre non trouvé');
+
+    const sae = await this.prisma.sae.create({
+      data: {
+        title: dto.title,
+        description: dto.description,
+        semesterId: dto.semesterId,
+        startDate: new Date(dto.startDate),
+        dueDate: new Date(dto.dueDate),
+        imageBanner: dto.imageBanner ?? null,
+        isPublished: false,
+        createdById,
+      },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    return {
+      id: sae.id,
+      title: sae.title,
+      imageBanner: sae.imageBanner,
+      description: sae.description,
+      semesterId: sae.semesterId,
+      startDate: sae.startDate,
+      dueDate: sae.dueDate,
+      isPublished: sae.isPublished,
+      status: computeSaeStatus(sae),
+      createdBy: sae.createdBy,
+      createdAt: sae.createdAt,
+      updatedAt: sae.updatedAt,
+    };
+  }
+
+  async update(
+    id: string,
+    dto: UpdateSaeDto,
+    requestingUserId: string,
+  ): Promise<SaeResponse> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id, deletedAt: null },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    if (dto.startDate || dto.dueDate) {
+      const startDate = dto.startDate ?? sae.startDate.toISOString();
+      const dueDate = dto.dueDate ?? sae.dueDate.toISOString();
+      this.validateDates(startDate, dueDate);
+    }
+
+    const updated = await this.prisma.sae.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        description: dto.description,
+        semesterId: dto.semesterId,
+        startDate: dto.startDate ? new Date(dto.startDate) : undefined,
+        dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
+        imageBanner: dto.imageBanner,
+        isPublished: dto.isPublished,
+      },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    return {
+      id: updated.id,
+      title: updated.title,
+      imageBanner: updated.imageBanner,
+      description: updated.description,
+      semesterId: updated.semesterId,
+      startDate: updated.startDate,
+      dueDate: updated.dueDate,
+      isPublished: updated.isPublished,
+      status: computeSaeStatus(updated),
+      createdBy: updated.createdBy,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  async publish(id: string, requestingUserId: string): Promise<SaeResponse> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id, deletedAt: null },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    if (sae.isPublished)
+      throw new ConflictException('La SAE est déjà publiée');
+    if (!sae.startDate || !sae.dueDate) {
+      throw new BadRequestException(
+        'La SAE doit avoir une date de début et une date de fin avant d\'être publiée',
+      );
+    }
+
+    const updated = await this.prisma.sae.update({
+      where: { id },
+      data: { isPublished: true },
+      include: {
+        createdBy: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    return {
+      id: updated.id,
+      title: updated.title,
+      imageBanner: updated.imageBanner,
+      description: updated.description,
+      semesterId: updated.semesterId,
+      startDate: updated.startDate,
+      dueDate: updated.dueDate,
+      isPublished: updated.isPublished,
+      status: computeSaeStatus(updated),
+      createdBy: updated.createdBy,
+      createdAt: updated.createdAt,
+      updatedAt: updated.updatedAt,
+    };
+  }
+
+  async remove(id: string, requestingUserId: string): Promise<void> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id, deletedAt: null },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    await this.prisma.sae.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
+
+  async createInvitation(
+    saeId: string,
+    dto: CreateInvitationDto,
+    requestingUserId: string,
+  ): Promise<SaeInvitationResponse> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+      select: { id: true, role: true, isActive: true },
+    });
+
+    if (!targetUser || !targetUser.isActive) {
+      throw new NotFoundException('Utilisateur non trouvé ou inactif');
+    }
+
+    if (targetUser.role !== UserRole.TEACHER) {
+      throw new BadRequestException('Seuls les enseignants peuvent être invités à une SAE');
+    }
+
+    if (targetUser.id === requestingUserId) {
+      throw new BadRequestException('Vous ne pouvez pas vous inviter vous-même');
+    }
+
+    const existingInvitation = await this.prisma.saeInvitation.findUnique({
+      where: { saeId_userId: { saeId, userId: dto.userId } },
+    });
+
+    if (existingInvitation) {
+      throw new ConflictException(
+        'Cet enseignant est déjà invité à cette SAE',
+      );
+    }
+
+    const invitation = await this.prisma.saeInvitation.create({
+      data: { saeId, userId: dto.userId },
+    });
+
+    return {
+      id: invitation.id,
+      saeId: invitation.saeId,
+      userId: invitation.userId,
+      createdAt: invitation.createdAt,
+    };
+  }
+
+  async findInvitations(
+    saeId: string,
+    requestingUserId: string,
+  ): Promise<SaeInvitationResponse[]> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    const invitations = await this.prisma.saeInvitation.findMany({
+      where: { saeId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return invitations.map((inv) => ({
+      id: inv.id,
+      saeId: inv.saeId,
+      userId: inv.userId,
+      createdAt: inv.createdAt,
+    }));
+  }
+
+  private validateDates(startDate: string, dueDate: string): void {
+    const start = new Date(startDate);
+    const due = new Date(dueDate);
+
+    if (isNaN(start.getTime()) || isNaN(due.getTime())) {
+      throw new BadRequestException('Format de date invalide');
+    }
+
+    if (due <= start) {
+      throw new BadRequestException('La date de fin doit être après la date de début');
+    }
+  }
+
+  private assertIsOwner(createdById: string, requestingUserId: string): void {
+    if (createdById !== requestingUserId) {
+      throw new ForbiddenException('Vous n\'êtes pas le propriétaire de cette SAE');
+    }
+  }
+}
