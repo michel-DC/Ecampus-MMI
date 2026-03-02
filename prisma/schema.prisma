@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model user {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  name          String
+  image         String?
+  role          UserRole  @default(STUDENT)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  sessions       session[]
+  accounts       account[]
+  studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
+  createdSaes    Sae[]
+  saeInvitations SaeInvitation[]
+
+  @@map("user")
+}
+
+model session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("session")
+}
+
+model account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("account")
+}
+
+model verification {
+  id         String    @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
+
+  @@map("verification")
+}
+
+model StudentProfile {
+  id          String @id @default(uuid())
+  userId      String @unique
+  promotionId String
+  groupId     String
+
+  user      user      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotion Promotion @relation(fields: [promotionId], references: [id])
+  group     Group     @relation(fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
+}
+
+model TeacherProfile {
+  id     String @id @default(uuid())
+  userId String @unique
+
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+model Promotion {
+  id        String  @id @default(uuid())
+  label     String
+  yearLevel Int
+  isActive  Boolean @default(true)
+
+  semesters Semester[]
+  groups    Group[]
+  students  StudentProfile[]
+
+  createdAt DateTime @default(now())
+}
+
+model Semester {
+  id          String @id @default(uuid())
+  number      Int
+  promotionId String
+
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  saes      Sae[]
+
+  createdAt DateTime @default(now())
+}
+
+model Group {
+  id          String @id @default(uuid())
+  name        String
+  promotionId String
+
+  promotion Promotion        @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  students  StudentProfile[]
+
+  createdAt DateTime @default(now())
+}
+
+model Sae {
+  id          String   @id @default(uuid())
+  title       String
+  imageBanner String?
+  description String   @db.Text
+  semesterId  String
+  createdById String
+  startDate   DateTime
+  dueDate     DateTime
+  isPublished Boolean  @default(false)
+
+  semester    Semester        @relation(fields: [semesterId], references: [id])
+  createdBy   user            @relation(fields: [createdById], references: [id])
+  invitations SaeInvitation[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([semesterId])
+  @@index([isPublished])
+  @@index([dueDate])
+}
+
+model SaeInvitation {
+  id     String @id @default(uuid())
+  saeId  String
+  userId String
+
+  sae  Sae  @relation(fields: [saeId], references: [id], onDelete: Cascade)
+  user user @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([saeId, userId])
+}

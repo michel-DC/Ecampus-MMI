@@ -1,0 +1,82 @@
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { OnboardingDto } from './dto/onboarding.dto';
+import { UserResponse } from './types/auth.types';
+
+@Injectable()
+export class AuthService {
+  constructor(private readonly prisma: PrismaService) {}
+
+  async findUserById(userId: string): Promise<UserResponse> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  async completeOnboarding(userId: string, dto: OnboardingDto): Promise<void> {
+    const existingProfile = await this.prisma.studentProfile.findUnique({
+      where: { userId },
+    });
+
+    if (existingProfile) {
+      throw new ConflictException('Onboarding already completed');
+    }
+
+    const promotion = await this.prisma.promotion.findUnique({
+      where: { id: dto.promotionId },
+    });
+
+    if (!promotion || !promotion.isActive) {
+      throw new NotFoundException('Promotion not found or inactive');
+    }
+
+    const group = await this.prisma.group.findUnique({
+      where: { id: dto.groupId },
+    });
+
+    if (!group || group.promotionId !== dto.promotionId) {
+      throw new BadRequestException(
+        'Group does not belong to the selected promotion',
+      );
+    }
+
+    await this.prisma.studentProfile.create({
+      data: {
+        userId,
+        promotionId: dto.promotionId,
+        groupId: dto.groupId,
+      },
+    });
+  }
+
+  async createTeacherProfileIfMissing(userId: string): Promise<void> {
+    const existing = await this.prisma.teacherProfile.findUnique({
+      where: { userId },
+    });
+
+    if (!existing) {
+      await this.prisma.teacherProfile.create({
+        data: { userId },
+      });
+    }
+  }
+}
