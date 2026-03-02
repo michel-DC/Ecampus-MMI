@@ -13,6 +13,9 @@ import { auth } from '../lib/auth';
 import { AuthService } from './auth.service';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
+import { UserRole } from '@prisma/client';
 import { CurrentUser } from './decorators/current-user.decorator';
 import type { JwtPayload, UserResponse } from './types/auth.types';
 import { toNodeHandler } from 'better-auth/node';
@@ -38,7 +41,8 @@ export class AuthController {
   }
 
   @Post('onboarding')
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.STUDENT)
   async onboarding(
     @CurrentUser() currentUser: JwtPayload,
     @Body() dto: OnboardingDto,

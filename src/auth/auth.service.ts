@@ -53,10 +53,8 @@ export class AuthService {
       where: { id: dto.groupId },
     });
 
-    if (!group || group.promotionId !== dto.promotionId) {
-      throw new BadRequestException(
-        'Le groupe n\'appartient pas à la promotion sélectionnée',
-      );
+    if (!group) {
+      throw new NotFoundException('Groupe non trouvé');
     }
 
     await this.prisma.studentProfile.create({

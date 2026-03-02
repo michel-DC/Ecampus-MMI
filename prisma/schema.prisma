@@ -109,7 +109,6 @@ model Promotion {
   isActive  Boolean @default(true)
 
   semesters Semester[]
-  groups    Group[]
   students  StudentProfile[]
 
   createdAt DateTime @default(now())
@@ -129,9 +128,7 @@ model Semester {
 model Group {
   id          String @id @default(uuid())
   name        String
-  promotionId String
 
-  promotion Promotion        @relation(fields: [promotionId], references: [id], onDelete: Cascade)
   students  StudentProfile[]
 
   createdAt DateTime @default(now())

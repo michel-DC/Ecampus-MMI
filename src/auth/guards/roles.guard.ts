@@ -27,7 +27,9 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!requiredRoles.includes(user.role)) {
-      throw new ForbiddenException('Insufficient permissions');
+      throw new ForbiddenException(
+        "L'onboarding n'est pas accessible à votre rôle",
+      );
     }
 
     return true;

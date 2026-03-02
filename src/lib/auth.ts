@@ -27,6 +27,15 @@ export const auth = betterAuth({
             data: user,
           };
         },
+        after: async (user) => {
+          if (user.role === 'TEACHER') {
+            await prisma.teacherProfile.create({
+              data: {
+                userId: user.id,
+              },
+            });
+          }
+        },
       },
     },
   },
