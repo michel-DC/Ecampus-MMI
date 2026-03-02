@@ -30,6 +30,7 @@ model user {
   teacherProfile TeacherProfile?
   createdSaes    Sae[]
   saeInvitations SaeInvitation[]
+  announcements  Announcement[]
 
   @@map("user")
 }
@@ -146,11 +147,12 @@ model Sae {
   dueDate     DateTime
   isPublished Boolean  @default(false)
 
-  semester    Semester        @relation(fields: [semesterId], references: [id])
-  thematic    Thematic        @relation(fields: [thematicId], references: [id])
-  banner      Banner          @relation(fields: [bannerId], references: [id])
-  createdBy   user            @relation(fields: [createdById], references: [id])
-  invitations SaeInvitation[]
+  semester      Semester        @relation(fields: [semesterId], references: [id])
+  thematic      Thematic        @relation(fields: [thematicId], references: [id])
+  banner        Banner          @relation(fields: [bannerId], references: [id])
+  createdBy     user            @relation(fields: [createdById], references: [id])
+  invitations   SaeInvitation[]
+  announcements Announcement[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -161,6 +163,22 @@ model Sae {
   @@index([bannerId])
   @@index([isPublished])
   @@index([dueDate])
+}
+
+model Announcement {
+  id          String @id @default(uuid())
+  title       String
+  content     String @db.Text
+  saeId       String
+  createdById String
+
+  sae       Sae  @relation(fields: [saeId], references: [id], onDelete: Cascade)
+  createdBy user @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([saeId])
 }
 
 model Banner {

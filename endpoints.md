@@ -1,140 +1,162 @@
-# Liste des Endpoints — Module SAE
+# Documentation des Endpoints API — Ecampus
 
-Ce document liste les nouveaux points d'entrée (endpoints) de l'API pour la gestion des SAE.
-
----
-
-## 🔐 Configuration Globale
-- **Base URL** : `/api/saes`
-- **Sécurité** : 
-    - Routes `GET /api/saes`, `GET /api/saes/:id` et `GET /api/saes/banners` : **Publiques** (accès sans connexion).
-    - Autres routes : `AuthGuard`, `RolesGuard`, `OnboardingGuard` (nécessitent d'être connecté et d'avoir complété son onboarding pour les étudiants).
+Ce document réunit l'ensemble des points d'entrée de l'API.
 
 ---
 
-## 1. Liste des Bannières (Public)
+## 🔐 Authentification & Onboarding
+Les routes d'authentification de base sont gérées par **Better Auth**.
+
+### 1. Inscription (Sign Up)
+- **Méthode** : `POST`
+- **URL** : `/api/auth/sign-up`
+- **Body** :
+```json
+{
+  "email": "user@example.com",
+  "password": "password123",
+  "name": "Jean Dupont",
+  "role": "STUDENT" // Ou "TEACHER"
+}
+```
+- **Note** : Le rôle est obligatoire. Pour les enseignants, un profil est créé automatiquement.
+
+### 2. Connexion (Sign In)
+- **Méthode** : `POST`
+- **URL** : `/api/auth/sign-in/email`
+- **Body** :
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+### 3. Utilisateur Actuel (Me)
+- **Méthode** : `GET`
+- **URL** : `/api/auth/me`
+- **Sécurité** : `AuthGuard`
+- **Description** : Retourne les informations de l'utilisateur connecté.
+
+### 4. Onboarding Étudiant
+- **Méthode** : `POST`
+- **URL** : `/api/auth/onboarding`
+- **Rôle** : `STUDENT` uniquement
+- **Sécurité** : `AuthGuard`, `RolesGuard`
+- **Body** :
+```json
+{
+  "promotionId": "ID_DE_LA_PROMOTION",
+  "groupId": "ID_DU_GROUPE"
+}
+```
+
+---
+
+## 📁 Ressources Pédagogiques (Publiques)
+
+### 5. Liste des Promotions
+- **Méthode** : `GET`
+- **URL** : `/api/promotions`
+- **Description** : Liste toutes les promotions actives (MMI1, MMI2, etc.).
+
+### 6. Liste des Groupes
+- **Méthode** : `GET`
+- **URL** : `/api/groups`
+- **Description** : Liste tous les groupes de TD/TP (GROUPEA1, etc.).
+
+### 7. Liste des Semestres
+- **Méthode** : `GET`
+- **URL** : `/api/semesters` (ou `/api/semester`)
+- **Description** : Liste les semestres avec leur promotion associée.
+
+---
+
+## 🚀 Module SAE (Situations d'Apprentissage et d'Évaluation)
+
+### 8. Liste des Bannières (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/banners`
-- **Description** : Récupère la liste des URLs de bannières prédéfinies pour les SAE.
-- **Exemple de réponse** :
-```json
-{
-  "success": true,
-  "data": [
-    { "id": "...", "url": "https://..." },
-    { "id": "...", "url": "https://..." }
-  ]
-}
-```
+- **Description** : Récupère la liste des URLs de bannières prédéfinies.
 
----
-
-## 2. Liste des SAE (Public)
+### 9. Liste des SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes`
-- **Rôle** : Tous
-- **Filtres (Query Params)** : `semesterId`, `isPublished` (enseignant uniquement), `status` (`draft`, `upcoming`, `ongoing`, `finished`).
-- **Exemple de réponse** :
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "...",
-      "title": "SAE 2.01",
-      "status": "ongoing",
-      "isPublished": true,
-      "thematic": {
-        "id": "...",
-        "code": "DEVELOPPEMENT_WEB",
-        "label": "Développement Web"
-      },
-      "banner": {
-        "id": "...",
-        "url": "https://..."
-      },
-      "createdBy": { "name": "Prof Martin", ... }
-    }
-  ],
-  "total": 1
-}
-```
+- **Filtres (Query)** : `semesterId`, `status`, `isPublished` (enseignant uniquement).
 
----
-
-## 3. Détail d'une SAE (Public)
+### 10. Détail d'une SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:id`
-- **Rôle** : Tous (les utilisateurs non connectés ne voient que si `isPublished: true`)
 
----
-
-## 4. Créer une SAE
+### 11. Créer une SAE
 - **Méthode** : `POST`
 - **URL** : `/api/saes`
 - **Rôle** : `TEACHER`, `ADMIN`
 - **Body** :
 ```json
 {
-  "title": "Développement Web Moderne",
-  "description": "Création d'une application complète avec NestJS et Prisma.",
-  "semesterId": "ID_DU_SEMESTRE",
-  "thematicId": "ID_DE_LA_THEMATIQUE",
-  "bannerId": "ID_DE_LA_BANNIERE",
+  "title": "Titre de la SAE",
+  "description": "Description détaillée",
+  "semesterId": "UUID",
+  "thematicId": "UUID",
+  "bannerId": "UUID",
   "startDate": "2026-03-01T08:00:00Z",
-  "dueDate": "2026-06-30T23:59:59Z",
-  "isPublished": false
+  "dueDate": "2026-06-30T23:59:59Z"
 }
 ```
 
----
-
-## 5. Modifier une SAE
+### 12. Modifier une SAE
 - **Méthode** : `PATCH`
 - **URL** : `/api/saes/:id`
-- **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
-- **Body** : (Tous les champs sont optionnels)
-```json
-{
-  "title": "Nouveau titre de la SAE",
-  "bannerId": "NOUVEL_ID_BANNIERE",
-  "thematicId": "NOUVEL_ID_THEMATIQUE",
-  "isPublished": true
-}
-```
+- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
 
----
-
-## 6. Publier une SAE
+### 13. Publier une SAE
 - **Méthode** : `POST`
 - **URL** : `/api/saes/:id/publish`
-- **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
-- **Description** : Rend la SAE visible pour tous les étudiants.
+- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
 
----
-
-## 7. Supprimer une SAE
+### 14. Supprimer une SAE
 - **Méthode** : `DELETE`
 - **URL** : `/api/saes/:id`
-- **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
-- **Description** : Suppression logique (le champ `deletedAt` est renseigné).
+- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
+
+### 15. Gestion des Invitations (Enseignants)
+- **POST** `/api/saes/:id/invitations` : Inviter un collègue.
+- **GET** `/api/saes/:id/invitations` : Voir les invités.
 
 ---
 
-## 8. Inviter un Enseignant
+## 📢 Module Annonces (Announcements)
+*Note : Toutes les routes sont relatives à une SAE spécifique.*
+
+### 16. Liste des Annonces (Public)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/:saeId/announcements`
+- **Description** : Liste toutes les annonces d'une SAE.
+- **Note** : Public pour les SAE publiées.
+
+### 17. Détail d'une Annonce (Public)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/:saeId/announcements/:id`
+
+### 18. Créer une Annonce
 - **Méthode** : `POST`
-- **URL** : `/api/saes/:id/invitations`
-- **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
+- **URL** : `/api/saes/:saeId/announcements`
+- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
 - **Body** :
 ```json
 {
-  "userId": "ID_DE_L_ENSEIGNANT_A_INVITER"
+  "title": "Titre de l'annonce",
+  "content": "Contenu détaillé de l'annonce"
 }
 ```
 
----
+### 19. Modifier une Annonce
+- **Méthode** : `PATCH`
+- **URL** : `/api/saes/:saeId/announcements/:id`
+- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
 
-## 9. Liste des Invitations
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:id/invitations`
-- **Rôle** : `TEACHER` (Propriétaire uniquement), `ADMIN`
+### 20. Supprimer une Annonce
+- **Méthode** : `DELETE`
+- **URL** : `/api/saes/:saeId/announcements/:id`
+- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
