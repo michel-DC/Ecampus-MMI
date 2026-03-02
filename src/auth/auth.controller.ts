@@ -26,14 +26,15 @@ export class AuthController {
   @Get('test')
   test() {
     this.logger.log('Test route reached');
-    return { status: 'ça fonctionne mon reuf' };
+    return { success: true, message: 'ça fonctionne mon reuf' };
   }
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async getMe(@CurrentUser() user: JwtPayload): Promise<UserResponse> {
+  async getMe(@CurrentUser() user: JwtPayload): Promise<any> {
     this.logger.log(`Fetching profile for user: ${user.sub}`);
-    return this.authService.findUserById(user.sub);
+    const userData = await this.authService.findUserById(user.sub);
+    return { success: true, data: userData };
   }
 
   @Post('onboarding')
@@ -41,15 +42,31 @@ export class AuthController {
   async onboarding(
     @CurrentUser() currentUser: JwtPayload,
     @Body() dto: OnboardingDto,
-  ): Promise<{ message: string }> {
+  ): Promise<{ success: boolean; message: string }> {
     await this.authService.completeOnboarding(currentUser.sub, dto);
-    return { message: 'Onboarding completed successfully' };
+    return { success: true, message: 'Onboarding terminé avec succès' };
   }
 
   @Post('*path')
   @Get('*path')
   async handleAuth(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.logger.log(`Better Auth handler reached: ${req.method} ${req.url}`);
+    
+    // Pour intercepter et modifier la réponse JSON si c'est un succès
+    const originalJson = res.json.bind(res);
+    res.json = (body: any) => {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        if (typeof body === 'object' && body !== null && !('success' in body)) {
+          body = { success: true, ...body };
+        }
+      } else {
+        if (typeof body === 'object' && body !== null && !('success' in body)) {
+          body = { success: false, ...body };
+        }
+      }
+      return originalJson(body);
+    };
+
     return toNodeHandler(auth)(req, res);
   }
 }

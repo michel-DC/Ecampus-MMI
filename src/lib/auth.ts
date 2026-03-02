@@ -12,8 +12,21 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         type: 'string',
-        required: false,
-        defaultValue: 'STUDENT',
+        required: true,
+      },
+    },
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          if (user.role !== 'STUDENT' && user.role !== 'TEACHER') {
+            throw new Error('Le rôle doit être soit STUDENT soit TEACHER');
+          }
+          return {
+            data: user,
+          };
+        },
       },
     },
   },

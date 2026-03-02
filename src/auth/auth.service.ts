@@ -26,7 +26,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new NotFoundException('Utilisateur non trouvé');
     }
 
     return user;
@@ -38,7 +38,7 @@ export class AuthService {
     });
 
     if (existingProfile) {
-      throw new ConflictException('Onboarding already completed');
+      throw new ConflictException('Onboarding déjà effectué');
     }
 
     const promotion = await this.prisma.promotion.findUnique({
@@ -46,7 +46,7 @@ export class AuthService {
     });
 
     if (!promotion || !promotion.isActive) {
-      throw new NotFoundException('Promotion not found or inactive');
+      throw new NotFoundException('Promotion non trouvée ou inactive');
     }
 
     const group = await this.prisma.group.findUnique({
@@ -55,7 +55,7 @@ export class AuthService {
 
     if (!group || group.promotionId !== dto.promotionId) {
       throw new BadRequestException(
-        'Group does not belong to the selected promotion',
+        'Le groupe n\'appartient pas à la promotion sélectionnée',
       );
     }
 

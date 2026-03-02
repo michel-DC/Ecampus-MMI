@@ -18,7 +18,7 @@ export class AuthGuard implements CanActivate {
     });
 
     if (!session || !session.user) {
-      throw new UnauthorizedException('Authentication required');
+      throw new UnauthorizedException('Authentification requise');
     }
 
     // Le champ role est maintenant disponible grâce à additionalFields dans Better Auth
