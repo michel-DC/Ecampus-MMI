@@ -70,6 +70,17 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **URL** : `/api/semesters` (ou `/api/semester`)
 - **Description** : Liste les semestres avec leur promotion associée.
 
+### 7.5 Upload de Fichier (Direct)
+- **Méthode** : `POST`
+- **URL** : `/api/resources/upload`
+- **Sécurité** : `AuthGuard`, `RolesGuard`, `OnboardingGuard`
+- **Body (formData)** :
+  - `file` : Le fichier binaire.
+  - `saeId` : UUID de la SAE concernée (obligatoire).
+  - `type` : (Enseignants uniquement) `SUJET`, `RESOURCE` ou `AUTRE`.
+- **Description** : Upload le fichier vers UploadThing et crée/met à jour l'enregistrement correspondant en base de données selon le rôle (Document SAE pour les profs, Rendu pour les étudiants).
+- **Note** : En cas d'échec de l'enregistrement en base de données, le fichier est automatiquement supprimé d'UploadThing pour éviter les fichiers orphelins.
+
 ---
 
 ## 🚀 Module SAE (Situations d'Apprentissage et d'Évaluation)
@@ -212,7 +223,8 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **URL** : `/api/saes/:saeId/submission/me`
 - **Rôle** : `STUDENT`
 
-### 26. Liste de tous les Rendus (Enseignants)
+### 26. Liste de tous les Rendus (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:saeId/submissions`
-- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`
+- **Description** : Liste tous les rendus déposés par les étudiants pour cette SAE.
+- **Note** : Public pour les SAE publiées.

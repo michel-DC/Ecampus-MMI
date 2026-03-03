@@ -223,23 +223,22 @@ export class DocumentsService {
 
   async findAllSubmissions(
     saeId: string,
-    requestingUserId: string,
+    requestingUserRole?: UserRole,
   ): Promise<StudentSubmissionResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: {
-        createdById: true,
-        invitations: { select: { userId: true } },
-      },
+      select: { isPublished: true },
     });
 
     if (!sae) throw new NotFoundException('SAE not found');
 
-    this.assertCanWriteOnSae(
-      sae.createdById,
-      sae.invitations,
-      requestingUserId,
-    );
+    const isTeacherOrAdmin =
+      requestingUserRole === UserRole.TEACHER ||
+      requestingUserRole === UserRole.ADMIN;
+
+    if (!sae.isPublished && !isTeacherOrAdmin) {
+      throw new ForbiddenException('This SAE is not published yet');
+    }
 
     const submissions = await this.prisma.studentSubmission.findMany({
       where: { saeId },

@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   HttpStatus,
   Param,
   Post,
@@ -13,6 +12,7 @@ import { UserRole } from '@prisma/client';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { OnboardingGuard } from '../auth/guards/onboarding.guard';
+import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/auth.types';
@@ -25,19 +25,20 @@ import {
 } from './types/document.types';
 
 @Controller('api/saes/:saeId')
-@UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Get('documents')
+  @UseGuards(OptionalAuthGuard)
   findSaeDocuments(
     @Param('saeId') saeId: string,
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<SaeDocumentResponse[]> {
-    return this.documentsService.findSaeDocuments(saeId, user.role);
+    return this.documentsService.findSaeDocuments(saeId, user?.role);
   }
 
   @Post('documents')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   addSaeDocument(
     @Param('saeId') saeId: string,
@@ -48,16 +49,18 @@ export class DocumentsController {
   }
 
   @Delete('documents/:documentId')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  removeSaeDocument(
+  async removeSaeDocument(
     @Param('documentId') documentId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<void> {
-    return this.documentsService.removeSaeDocument(documentId, user.sub);
+  ): Promise<{ success: boolean }> {
+    await this.documentsService.removeSaeDocument(documentId, user.sub);
+    return { success: true };
   }
 
   @Post('submission')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.STUDENT)
   submitDocument(
     @Param('saeId') saeId: string,
@@ -68,6 +71,7 @@ export class DocumentsController {
   }
 
   @Get('submission/me')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.STUDENT)
   findMySubmission(
     @Param('saeId') saeId: string,
@@ -77,11 +81,11 @@ export class DocumentsController {
   }
 
   @Get('submissions')
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @UseGuards(OptionalAuthGuard)
   findAllSubmissions(
     @Param('saeId') saeId: string,
-    @CurrentUser() user: JwtPayload,
+    @CurrentUser() user?: JwtPayload,
   ): Promise<StudentSubmissionResponse[]> {
-    return this.documentsService.findAllSubmissions(saeId, user.sub);
+    return this.documentsService.findAllSubmissions(saeId, user?.role);
   }
 }
