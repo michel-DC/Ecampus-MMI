@@ -1,4 +1,4 @@
-import { IsString, IsUrl } from 'class-validator';
+import { IsString, IsUrl, IsOptional } from 'class-validator';
 
 export class CreateSubmissionDto {
   @IsUrl()
@@ -9,4 +9,11 @@ export class CreateSubmissionDto {
 
   @IsString()
   mimeType: string;
+
+  @IsString()
+  description: string;
+
+  @IsUrl()
+  @IsOptional()
+  imageUrl?: string;
 }

@@ -1,4 +1,4 @@
-import { IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsOptional, IsString, IsUUID, IsUrl } from 'class-validator';
 import { DocumentType } from '@prisma/client';
 
 export class UploadResourceDto {
@@ -8,4 +8,12 @@ export class UploadResourceDto {
   @IsEnum(DocumentType)
   @IsOptional()
   type?: DocumentType;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsUrl()
+  @IsOptional()
+  imageUrl?: string;
 }

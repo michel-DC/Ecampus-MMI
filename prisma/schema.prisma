@@ -242,6 +242,8 @@ model StudentSubmission {
   url         String
   name        String
   mimeType    String
+  description String   @db.Text
+  imageUrl    String?
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

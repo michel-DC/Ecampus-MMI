@@ -22,7 +22,7 @@ export class DocumentsService {
 
   async findSaeDocuments(
     saeId: string,
-    requestingUserRole: UserRole,
+    requestingUserRole?: UserRole,
   ): Promise<SaeDocumentResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
@@ -177,11 +177,15 @@ export class DocumentsService {
         url: dto.url,
         name: dto.name,
         mimeType: dto.mimeType,
+        description: dto.description,
+        imageUrl: dto.imageUrl,
       },
       update: {
         url: dto.url,
         name: dto.name,
         mimeType: dto.mimeType,
+        description: dto.description,
+        imageUrl: dto.imageUrl,
         submittedAt: new Date(),
       },
     });
@@ -193,6 +197,8 @@ export class DocumentsService {
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
+      description: submission.description,
+      imageUrl: submission.imageUrl,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -216,6 +222,8 @@ export class DocumentsService {
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
+      description: submission.description,
+      imageUrl: submission.imageUrl,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -252,6 +260,8 @@ export class DocumentsService {
       url: s.url,
       name: s.name,
       mimeType: s.mimeType,
+      description: s.description,
+      imageUrl: s.imageUrl,
       submittedAt: s.submittedAt,
       updatedAt: s.updatedAt,
     }));

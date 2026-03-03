@@ -213,7 +213,9 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 {
   "url": "https://...",
   "name": "Rendu_GroupeA.zip",
-  "mimeType": "application/zip"
+  "mimeType": "application/zip",
+  "description": "Une description détaillée du travail effectué.",
+  "imageUrl": "https://... (optionnel)"
 }
 ```
 - **Note** : Un seul rendu par étudiant, écrase le précédent si renvoyé.

@@ -63,12 +63,18 @@ export class ResourcesService {
     // 3. Enregistrement en base de données
     try {
       if (role === UserRole.STUDENT) {
+        if (!dto.description) {
+          throw new BadRequestException('La description est obligatoire pour un rendu');
+        }
+
         return await this.documentsService.submitDocument(
           dto.saeId,
           {
             url: fileData.url,
             name: fileData.name,
             mimeType: file.mimetype,
+            description: dto.description,
+            imageUrl: dto.imageUrl,
           },
           userId,
         );
