@@ -22,12 +22,6 @@ import {
 export class SaesService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findBanners(): Promise<any[]> {
-    return this.prisma.banner.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
-  }
-
   async findAll(
     filters: SaeFiltersDto,
     requestingUserId?: string,
@@ -97,7 +91,7 @@ export class SaesService {
     if (!sae) throw new NotFoundException('SAE non trouvée');
 
     if (!sae.isPublished && !isTeacherOrAdmin) {
-      throw new ForbiddenException('Cette SAE n\'est pas encore publiée');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     return {
@@ -253,11 +247,10 @@ export class SaesService {
     if (!sae) throw new NotFoundException('SAE non trouvée');
     this.assertIsOwner(sae.createdById, requestingUserId);
 
-    if (sae.isPublished)
-      throw new ConflictException('La SAE est déjà publiée');
+    if (sae.isPublished) throw new ConflictException('La SAE est déjà publiée');
     if (!sae.startDate || !sae.dueDate) {
       throw new BadRequestException(
-        'La SAE doit avoir une date de début et une date de fin avant d\'être publiée',
+        "La SAE doit avoir une date de début et une date de fin avant d'être publiée",
       );
     }
 
@@ -326,11 +319,15 @@ export class SaesService {
     }
 
     if (targetUser.role !== UserRole.TEACHER) {
-      throw new BadRequestException('Seuls les enseignants peuvent être invités à une SAE');
+      throw new BadRequestException(
+        'Seuls les enseignants peuvent être invités à une SAE',
+      );
     }
 
     if (targetUser.id === requestingUserId) {
-      throw new BadRequestException('Vous ne pouvez pas vous inviter vous-même');
+      throw new BadRequestException(
+        'Vous ne pouvez pas vous inviter vous-même',
+      );
     }
 
     const existingInvitation = await this.prisma.saeInvitation.findUnique({
@@ -338,9 +335,7 @@ export class SaesService {
     });
 
     if (existingInvitation) {
-      throw new ConflictException(
-        'Cet enseignant est déjà invité à cette SAE',
-      );
+      throw new ConflictException('Cet enseignant est déjà invité à cette SAE');
     }
 
     const invitation = await this.prisma.saeInvitation.create({
@@ -388,13 +383,17 @@ export class SaesService {
     }
 
     if (due <= start) {
-      throw new BadRequestException('La date de fin doit être après la date de début');
+      throw new BadRequestException(
+        'La date de fin doit être après la date de début',
+      );
     }
   }
 
   private assertIsOwner(createdById: string, requestingUserId: string): void {
     if (createdById !== requestingUserId) {
-      throw new ForbiddenException('Vous n\'êtes pas le propriétaire de cette SAE');
+      throw new ForbiddenException(
+        "Vous n'êtes pas le propriétaire de cette SAE",
+      );
     }
   }
 }

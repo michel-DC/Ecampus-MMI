@@ -5,6 +5,12 @@ import { ResourcesService } from './resources.service';
 export class ResourcesController {
   constructor(private readonly resourcesService: ResourcesService) {}
 
+  @Get('banners')
+  async getBanners(): Promise<any> {
+    const banners = await this.resourcesService.findBanners();
+    return { success: true, data: banners };
+  }
+
   @Get('promotions')
   async getPromotions() {
     const data = await this.resourcesService.findAllPromotions();

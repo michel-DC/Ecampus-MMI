@@ -5,6 +5,12 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ResourcesService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findBanners(): Promise<any[]> {
+    return this.prisma.banner.findMany({
+      orderBy: { createdAt: 'asc' },
+    });
+  }
+
   async findAllPromotions() {
     return this.prisma.promotion.findMany({
       where: { isActive: true },

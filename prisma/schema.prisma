@@ -31,6 +31,7 @@ model user {
   createdSaes    Sae[]
   saeInvitations SaeInvitation[]
   announcements  Announcement[]
+  submissions    StudentSubmission[]
 
   @@map("user")
 }
@@ -153,6 +154,8 @@ model Sae {
   createdBy     user            @relation(fields: [createdById], references: [id])
   invitations   SaeInvitation[]
   announcements Announcement[]
+  documents     SaeDocument[]
+  submissions   StudentSubmission[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -209,4 +212,42 @@ model SaeInvitation {
   createdAt DateTime @default(now())
 
   @@unique([saeId, userId])
+}
+
+enum DocumentType {
+  SUJET
+  RESOURCE
+  AUTRE
+}
+
+model SaeDocument {
+  id       String       @id @default(uuid())
+  saeId    String
+  url      String
+  name     String
+  mimeType String
+  type     DocumentType
+
+  sae Sae @relation(fields: [saeId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([saeId])
+}
+
+model StudentSubmission {
+  id          String   @id @default(uuid())
+  saeId       String
+  studentId   String
+  url         String
+  name        String
+  mimeType    String
+  submittedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sae     Sae  @relation(fields: [saeId], references: [id], onDelete: Cascade)
+  student user @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([saeId, studentId])
+  @@index([saeId])
 }

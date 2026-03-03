@@ -160,3 +160,59 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **Méthode** : `DELETE`
 - **URL** : `/api/saes/:saeId/announcements/:id`
 - **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
+
+---
+
+## 📁 Module Documents (Ressources + Rendus)
+*Note : Toutes les routes sont relatives à une SAE spécifique.*
+
+### 21. Liste des Documents SAE (Public)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/:saeId/documents`
+- **Description** : Liste les ressources ajoutées par les enseignants (consignes, exemples).
+- **Note** : Public pour les SAE publiées.
+
+### 22. Ajouter un Document SAE
+- **Méthode** : `POST`
+- **URL** : `/api/saes/:saeId/documents`
+- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`
+- **Body** :
+```json
+{
+  "url": "https://...",
+  "name": "Sujet_SAE.pdf",
+  "mimeType": "application/pdf",
+  "type": "INSTRUCTION" // Ou "RESOURCE", "EXAMPLE"
+}
+```
+- **Note** : Limité à 3 documents par SAE.
+
+### 23. Supprimer un Document SAE
+- **Méthode** : `DELETE`
+- **URL** : `/api/saes/:saeId/documents/:documentId`
+- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`
+
+### 24. Soumettre un Rendu Étudiant
+- **Méthode** : `POST`
+- **URL** : `/api/saes/:saeId/submission`
+- **Rôle** : `STUDENT` (de la promotion concernée)
+- **Condition** : La SAE doit être en cours (`ongoing`).
+- **Body** :
+```json
+{
+  "url": "https://...",
+  "name": "Rendu_GroupeA.zip",
+  "mimeType": "application/zip"
+}
+```
+- **Note** : Un seul rendu par étudiant, écrase le précédent si renvoyé.
+
+### 25. Consulter son propre Rendu
+- **Méthode** : `GET`
+- **URL** : `/api/saes/:saeId/submission/me`
+- **Rôle** : `STUDENT`
+
+### 26. Liste de tous les Rendus (Enseignants)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/:saeId/submissions`
+- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`

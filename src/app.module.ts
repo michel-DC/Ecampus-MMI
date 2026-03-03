@@ -5,8 +5,9 @@ import { PrismaModule } from './prisma/prisma.module';
 import { SaesModule } from './saes/saes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ResourcesModule } from './resources/resources.module';
+import { DocumentsModule } from './documents/documents.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, SaesModule, AnnouncementsModule, ResourcesModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, SaesModule, AnnouncementsModule, ResourcesModule, DocumentsModule],
 })
 export class AppModule {}

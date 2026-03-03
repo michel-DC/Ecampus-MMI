@@ -29,20 +29,17 @@ import { SaeFiltersDto } from './dto/sae-filters.dto';
 export class SaesController {
   constructor(private readonly saesService: SaesService) {}
 
-  @Get('banners')
-  @UseGuards(OptionalAuthGuard)
-  async getBanners(): Promise<any> {
-    const banners = await this.saesService.findBanners();
-    return { success: true, data: banners };
-  }
-
   @Get()
   @UseGuards(OptionalAuthGuard)
   async findAll(
     @Query() filters: SaeFiltersDto,
     @CurrentUser() user?: JwtPayload,
   ): Promise<any> {
-    const result = await this.saesService.findAll(filters, user?.sub, user?.role);
+    const result = await this.saesService.findAll(
+      filters,
+      user?.sub,
+      user?.role,
+    );
     return { success: true, ...result };
   }
 
