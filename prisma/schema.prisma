@@ -141,6 +141,7 @@ model Sae {
   title       String
   bannerId    String
   description String   @db.Text
+  instructions String? @db.Text
   semesterId  String
   thematicId  String
   createdById String

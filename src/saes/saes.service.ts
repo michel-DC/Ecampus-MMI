@@ -51,6 +51,7 @@ export class SaesService {
       bannerId: sae.bannerId,
       banner: sae.banner,
       description: sae.description,
+      instructions: sae.instructions,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
       thematic: sae.thematic,
@@ -100,6 +101,7 @@ export class SaesService {
       bannerId: sae.bannerId,
       banner: sae.banner,
       description: sae.description,
+      instructions: sae.instructions,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
       thematic: sae.thematic,
@@ -135,6 +137,7 @@ export class SaesService {
       data: {
         title: dto.title,
         description: dto.description,
+        instructions: dto.instructions,
         semesterId: dto.semesterId,
         thematicId: dto.thematicId,
         bannerId: dto.bannerId,
@@ -156,6 +159,7 @@ export class SaesService {
       bannerId: sae.bannerId,
       banner: sae.banner,
       description: sae.description,
+      instructions: sae.instructions,
       semesterId: sae.semesterId,
       thematicId: sae.thematicId,
       thematic: sae.thematic,
@@ -206,6 +210,7 @@ export class SaesService {
       data: {
         title: dto.title,
         description: dto.description,
+        instructions: dto.instructions,
         semesterId: dto.semesterId,
         thematicId: dto.thematicId,
         bannerId: dto.bannerId,
@@ -226,6 +231,7 @@ export class SaesService {
       bannerId: updated.bannerId,
       banner: updated.banner,
       description: updated.description,
+      instructions: updated.instructions,
       semesterId: updated.semesterId,
       thematicId: updated.thematicId,
       thematic: updated.thematic,
@@ -270,6 +276,7 @@ export class SaesService {
       bannerId: updated.bannerId,
       banner: updated.banner,
       description: updated.description,
+      instructions: updated.instructions,
       semesterId: updated.semesterId,
       thematicId: updated.thematicId,
       thematic: updated.thematic,
@@ -311,7 +318,7 @@ export class SaesService {
 
     const targetUser = await this.prisma.user.findUnique({
       where: { id: dto.userId },
-      select: { id: true, role: true, isActive: true },
+      select: { id: true, name: true, role: true, isActive: true },
     });
 
     if (!targetUser || !targetUser.isActive) {
@@ -346,6 +353,7 @@ export class SaesService {
       id: invitation.id,
       saeId: invitation.saeId,
       userId: invitation.userId,
+      name: targetUser.name,
       createdAt: invitation.createdAt,
     };
   }
@@ -363,6 +371,7 @@ export class SaesService {
 
     const invitations = await this.prisma.saeInvitation.findMany({
       where: { saeId },
+      include: { user: { select: { name: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -370,6 +379,7 @@ export class SaesService {
       id: inv.id,
       saeId: inv.saeId,
       userId: inv.userId,
+      name: inv.user.name,
       createdAt: inv.createdAt,
     }));
   }

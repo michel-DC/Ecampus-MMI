@@ -108,6 +108,7 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 {
   "title": "Titre de la SAE",
   "description": "Description détaillée",
+  "instructions": "Consignes de travail (optionnel)",
   "semesterId": "UUID",
   "thematicId": "UUID",
   "bannerId": "UUID",

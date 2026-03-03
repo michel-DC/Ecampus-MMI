@@ -28,7 +28,7 @@ export class RolesGuard implements CanActivate {
 
     if (!requiredRoles.includes(user.role)) {
       throw new ForbiddenException(
-        "L'onboarding n'est pas accessible à votre rôle",
+        "Vous n'avez pas les droits nécessaires pour accéder à cette ressource",
       );
     }
 

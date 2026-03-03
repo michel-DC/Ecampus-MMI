@@ -29,7 +29,7 @@ export class AuthController {
   @Get('test')
   test() {
     this.logger.log('Test route reached');
-    return { success: true, message: 'ça fonctionne mon reuf' };
+    return { success: true, message: "L'authentification fonctionne correctement" };
   }
 
   @Get('me')

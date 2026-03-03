@@ -23,6 +23,7 @@ export interface SaeResponse {
   bannerId: string;
   banner: SaeBanner;
   description: string;
+  instructions?: string | null;
   semesterId: string;
   thematicId: string;
   thematic: SaeThematic;
@@ -44,6 +45,7 @@ export interface SaeInvitationResponse {
   id: string;
   saeId: string;
   userId: string;
+  name: string;
   createdAt: Date;
 }
 

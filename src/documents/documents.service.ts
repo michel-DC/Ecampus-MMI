@@ -29,14 +29,14 @@ export class DocumentsService {
       select: { isPublished: true },
     });
 
-    if (!sae) throw new NotFoundException('SAE not found');
+    if (!sae) throw new NotFoundException('SAE non trouvée');
 
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
       requestingUserRole === UserRole.ADMIN;
 
     if (!sae.isPublished && !isTeacherOrAdmin) {
-      throw new ForbiddenException('This SAE is not published yet');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     const documents = await this.prisma.saeDocument.findMany({
@@ -69,7 +69,7 @@ export class DocumentsService {
       },
     });
 
-    if (!sae) throw new NotFoundException('SAE not found');
+    if (!sae) throw new NotFoundException('SAE non trouvée');
 
     this.assertCanWriteOnSae(
       sae.createdById,
@@ -79,7 +79,7 @@ export class DocumentsService {
 
     if (sae._count.documents >= SAE_DOCUMENT_LIMIT) {
       throw new BadRequestException(
-        `A SAE cannot have more than ${SAE_DOCUMENT_LIMIT} documents`,
+        `Une SAE ne peut pas avoir plus de ${SAE_DOCUMENT_LIMIT} documents`,
       );
     }
 
@@ -119,7 +119,7 @@ export class DocumentsService {
     });
 
     if (!document || document.sae.deletedAt) {
-      throw new NotFoundException('Document not found');
+      throw new NotFoundException('Document non trouvé');
     }
 
     this.assertCanWriteOnSae(
@@ -143,14 +143,14 @@ export class DocumentsService {
       },
     });
 
-    if (!sae) throw new NotFoundException('SAE not found');
+    if (!sae) throw new NotFoundException('SAE non trouvée');
     if (!sae.isPublished)
-      throw new ForbiddenException('This SAE is not published yet');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
 
     const status = computeSaeStatus(sae);
     if (status !== 'ongoing') {
       throw new BadRequestException(
-        'Submissions are only allowed while the SAE is ongoing',
+        "Les rendus ne sont autorisés que lorsque la SAE est en cours",
       );
     }
 
@@ -160,12 +160,12 @@ export class DocumentsService {
     });
 
     if (!studentProfile) {
-      throw new ForbiddenException('Student profile not found');
+      throw new ForbiddenException("Profil étudiant non trouvé");
     }
 
     if (sae.semester.promotionId !== studentProfile.promotionId) {
       throw new ForbiddenException(
-        'This SAE does not belong to your promotion',
+        "Cette SAE n'appartient pas à votre promotion",
       );
     }
 
@@ -213,7 +213,7 @@ export class DocumentsService {
     });
 
     if (!submission)
-      throw new NotFoundException('No submission found for this SAE');
+      throw new NotFoundException("Aucun rendu trouvé pour cette SAE");
 
     return {
       id: submission.id,
@@ -238,14 +238,14 @@ export class DocumentsService {
       select: { isPublished: true },
     });
 
-    if (!sae) throw new NotFoundException('SAE not found');
+    if (!sae) throw new NotFoundException('SAE non trouvée');
 
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
       requestingUserRole === UserRole.ADMIN;
 
     if (!sae.isPublished && !isTeacherOrAdmin) {
-      throw new ForbiddenException('This SAE is not published yet');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     const submissions = await this.prisma.studentSubmission.findMany({
@@ -278,7 +278,7 @@ export class DocumentsService {
     );
 
     if (!isOwner && !isInvited) {
-      throw new ForbiddenException('You do not have write access to this SAE');
+      throw new ForbiddenException("Vous n'avez pas les droits d'écriture sur cette SAE");
     }
   }
 }

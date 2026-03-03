@@ -16,6 +16,11 @@ export class CreateSaeDto {
   @MinLength(10)
   description: string;
 
+  @IsString()
+  @MinLength(10)
+  @IsOptional()
+  instructions?: string;
+
   @IsUUID()
   semesterId: string;
 
