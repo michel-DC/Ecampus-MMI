@@ -93,16 +93,27 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 ### 9. Liste des SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes`
-- **Filtres (Query)** : `semesterId`, `status`, `isPublished` (enseignant uniquement).
+- **Filtres (Query)** : 
+  - `semesterId` : Filtrer par semestre.
+  - `groupId` : (Enseignants) Filtrer par groupe de TD.
+  - `status` : `draft`, `upcoming`, `ongoing`, `finished`.
+  - `isUrgent` : `true` pour voir les SAE finissant dans moins de 3 jours.
+  - `isPublished` : (Enseignants uniquement).
+- **Réponse (Champs calculés)** :
+  - `isSubmitted` : `true` si l'étudiant connecté a rendu son travail (uniquement pour sa promotion).
+  - `isUrgent` : `true` si l'échéance est proche (< 3 jours) et la SAE est en cours.
+  - `submissionCount` / `studentCount` : (Enseignants) État de l'avancement global ou par groupe.
 
 ### 10. Détail d'une SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:id`
+- **Note** : Retourne les mêmes champs calculés que la liste (`isSubmitted`, `isUrgent`, etc.).
 
 ### 11. Créer une SAE
 - **Méthode** : `POST`
 - **URL** : `/api/saes`
 - **Rôle** : `TEACHER`, `ADMIN`
+- **Note sur la réponse** : Les champs `bannerId` et `thematicId` sont supprimés de la réponse au profit des objets complets `banner` et `thematic`.
 - **Body** :
 ```json
 {

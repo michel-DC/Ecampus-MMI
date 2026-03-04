@@ -1,35 +1,25 @@
 export type SaeStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
 
 export interface SaeAuthor {
-  id: string;
   name: string;
   email: string;
-}
-
-export interface SaeThematic {
-  id: string;
-  code: string;
-  label: string;
-}
-
-export interface SaeBanner {
-  id: string;
-  url: string;
 }
 
 export interface SaeResponse {
   id: string;
   title: string;
-  banner: SaeBanner;
+  banner: string;
   description: string;
   instructions?: string | null;
   semesterId: string;
-  thematic: SaeThematic;
+  thematic: string;
   startDate: Date;
   dueDate: Date;
   isPublished: boolean;
   isSubmitted?: boolean;
   isUrgent: boolean;
+  submissionCount?: number;
+  studentCount?: number;
   status: SaeStatus;
   createdBy: SaeAuthor;
   createdAt: Date;

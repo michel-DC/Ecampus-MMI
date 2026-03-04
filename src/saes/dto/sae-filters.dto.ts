@@ -7,6 +7,10 @@ export class SaeFiltersDto {
   @IsOptional()
   semesterId?: string;
 
+  @IsUUID()
+  @IsOptional()
+  groupId?: string;
+
   @IsBoolean()
   @IsOptional()
   @Transform(({ value }: { value: string }) => value === 'true')

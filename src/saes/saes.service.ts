@@ -51,38 +51,89 @@ export class SaesService {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
-        semester: { select: { promotionId: true } },
+        semester: { select: { id: true, promotionId: true } },
         submissions: isStudent
           ? { where: { studentId: requestingUserId }, select: { id: true } }
-          : false,
+          : isTeacherOrAdmin
+            ? {
+                where: filters.groupId
+                  ? {
+                      student: {
+                        studentProfile: {
+                          groupId: filters.groupId,
+                          // On s'assure que l'étudiant est bien dans la promotion de la SAE
+                          promotion: { semesters: { some: { saes: { some: { id: { not: undefined } } } } } }
+                        }
+                      }
+                    }
+                  : undefined,
+                select: { id: true },
+              }
+            : false,
       },
       orderBy: { createdAt: 'desc' },
     });
 
+    // Correction des statistiques : croiser Promotion de la SAE + Groupe
+    const stats = isTeacherOrAdmin
+      ? await Promise.all(
+          saes.map(async (sae) => {
+            const count = await this.prisma.studentProfile.count({
+              where: {
+                promotionId: sae.semester.promotionId,
+                groupId: filters.groupId, // Peut être undefined
+              },
+            });
+
+            // On doit aussi refiltrer les submissions pour qu'elles correspondent au groupe si présent
+            let submissionCount = sae.submissions.length;
+            if (filters.groupId) {
+                // Si un groupe est filtré, on doit recompter les submissions pour ce groupe précis
+                submissionCount = await this.prisma.studentSubmission.count({
+                    where: {
+                        saeId: sae.id,
+                        student: { studentProfile: { groupId: filters.groupId } }
+                    }
+                });
+            }
+
+            return { saeId: sae.id, studentCount: count, submissionCount };
+          }),
+        )
+      : [];
+
     const mapped: SaeResponse[] = saes.map((sae) => {
-      const isHisPromotion = isStudent && sae.semester.promotionId === studentPromotionId;
+      const isHisPromotion =
+        isStudent && sae.semester.promotionId === studentPromotionId;
       const status = computeSaeStatus(sae);
-      
+
       const now = new Date();
       const threeDaysFromNow = new Date();
       threeDaysFromNow.setDate(now.getDate() + 3);
       const isUrgent = status === 'ongoing' && sae.dueDate <= threeDaysFromNow;
 
+      const saeStats = stats.find((s) => s.saeId === sae.id);
+
       return {
         id: sae.id,
         title: sae.title,
-        banner: sae.banner,
+        banner: sae.banner.url,
         description: sae.description,
         instructions: sae.instructions,
         semesterId: sae.semesterId,
-        thematic: sae.thematic,
+        thematic: sae.thematic.label,
         startDate: sae.startDate,
         dueDate: sae.dueDate,
         isPublished: sae.isPublished,
         isSubmitted: isHisPromotion ? sae.submissions.length > 0 : undefined,
         isUrgent,
+        submissionCount: isTeacherOrAdmin ? saeStats?.submissionCount : undefined,
+        studentCount: isTeacherOrAdmin ? saeStats?.studentCount : undefined,
         status,
-        createdBy: sae.createdBy,
+        createdBy: {
+          name: sae.createdBy.name,
+          email: sae.createdBy.email,
+        },
         createdAt: sae.createdAt,
         updatedAt: sae.updatedAt,
       };
@@ -135,7 +186,9 @@ export class SaesService {
         semester: { select: { promotionId: true } },
         submissions: isStudent
           ? { where: { studentId: requestingUserId }, select: { id: true } }
-          : false,
+          : isTeacherOrAdmin
+            ? { select: { id: true } }
+            : false,
       },
     });
 
@@ -153,21 +206,32 @@ export class SaesService {
     threeDaysFromNow.setDate(now.getDate() + 3);
     const isUrgent = status === 'ongoing' && sae.dueDate <= threeDaysFromNow;
 
+    const studentCount = isTeacherOrAdmin
+      ? await this.prisma.studentProfile.count({
+          where: { promotionId: sae.semester.promotionId },
+        })
+      : undefined;
+
     return {
       id: sae.id,
       title: sae.title,
-      banner: sae.banner,
+      banner: sae.banner.url,
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
-      thematic: sae.thematic,
+      thematic: sae.thematic.label,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
       isSubmitted: isHisPromotion ? sae.submissions.length > 0 : undefined,
       isUrgent,
+      submissionCount: isTeacherOrAdmin ? sae.submissions.length : undefined,
+      studentCount,
       status,
-      createdBy: sae.createdBy,
+      createdBy: {
+        name: sae.createdBy.name,
+        email: sae.createdBy.email,
+      },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
     };
@@ -220,17 +284,20 @@ export class SaesService {
     return {
       id: sae.id,
       title: sae.title,
-      banner: sae.banner,
+      banner: sae.banner.url,
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
-      thematic: sae.thematic,
+      thematic: sae.thematic.label,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
       isUrgent,
       status,
-      createdBy: sae.createdBy,
+      createdBy: {
+        name: sae.createdBy.name,
+        email: sae.createdBy.email,
+      },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
     };
@@ -297,17 +364,20 @@ export class SaesService {
     return {
       id: updated.id,
       title: updated.title,
-      banner: updated.banner,
+      banner: updated.banner.url,
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
-      thematic: updated.thematic,
+      thematic: updated.thematic.label,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,
       isUrgent,
       status,
-      createdBy: updated.createdBy,
+      createdBy: {
+        name: updated.createdBy.name,
+        email: updated.createdBy.email,
+      },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };
@@ -347,17 +417,20 @@ export class SaesService {
     return {
       id: updated.id,
       title: updated.title,
-      banner: updated.banner,
+      banner: updated.banner.url,
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
-      thematic: updated.thematic,
+      thematic: updated.thematic.label,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,
       isUrgent,
       status,
-      createdBy: updated.createdBy,
+      createdBy: {
+        name: updated.createdBy.name,
+        email: updated.createdBy.email,
+      },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };
