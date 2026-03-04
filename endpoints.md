@@ -1,29 +1,31 @@
 # Documentation des Endpoints API — Ecampus
 
-Ce document réunit l'ensemble des points d'entrée de l'API.
+Ce document réunit l'ensemble des points d'entrée de l'API avec les permissions associées.
 
 ---
 
-## 🔐 Authentification & Onboarding
-Les routes d'authentification de base sont gérées par **Better Auth**.
+## Authentification et Onboarding
+Les routes d'authentification de base sont gérées par Better Auth.
 
 ### 1. Inscription (Sign Up)
-- **Méthode** : `POST`
-- **URL** : `/api/auth/sign-up`
+- **Méthode** : POST
+- **URL** : /api/auth/sign-up
+- **Rôle** : PUBLIC
 - **Body** :
 ```json
 {
   "email": "user@example.com",
   "password": "password123",
   "name": "Jean Dupont",
-  "role": "STUDENT" // Ou "TEACHER"
+  "role": "STUDENT"
 }
 ```
-- **Note** : Le rôle est obligatoire. Pour les enseignants, un profil est créé automatiquement.
+- **Note** : Le rôle est obligatoire (STUDENT ou TEACHER).
 
 ### 2. Connexion (Sign In)
-- **Méthode** : `POST`
-- **URL** : `/api/auth/sign-in/email`
+- **Méthode** : POST
+- **URL** : /api/auth/sign-in/email
+- **Rôle** : PUBLIC
 - **Body** :
 ```json
 {
@@ -32,102 +34,118 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 }
 ```
 
-### 3. Utilisateur Actuel (Me)
-- **Méthode** : `GET`
-- **URL** : `/api/auth/me`
-- **Sécurité** : `AuthGuard`
+### 3. Déconnexion (Sign Out)
+- **Méthode** : POST
+- **URL** : /api/auth/sign-out
+- **Rôle** : CONNECTÉ (Tous rôles)
+- **Description** : Termine la session actuelle.
+
+### 4. Utilisateur Actuel (Me)
+- **Méthode** : GET
+- **URL** : /api/auth/me
+- **Rôle** : CONNECTÉ (Tous rôles)
+- **Sécurité** : AuthGuard
 - **Description** : Retourne les informations de l'utilisateur connecté.
 
-### 4. Onboarding Étudiant
-- **Méthode** : `POST`
-- **URL** : `/api/auth/onboarding`
-- **Rôle** : `STUDENT` uniquement
-- **Sécurité** : `AuthGuard`, `RolesGuard`
+### 5. Onboarding Étudiant
+- **Méthode** : POST
+- **URL** : /api/auth/onboarding
+- **Rôle** : STUDENT uniquement
+- **Sécurité** : AuthGuard, RolesGuard
 - **Body** :
 ```json
 {
-  "promotionId": "ID_DE_LA_PROMOTION",
-  "groupId": "ID_DU_GROUPE"
+  "promotionId": "UUID_DE_LA_PROMOTION",
+  "groupId": "UUID_DU_GROUPE"
 }
 ```
 
 ---
 
-## 📁 Ressources Pédagogiques (Publiques)
+## Ressources Pédagogiques
 
-### 5. Liste des Promotions
-- **Méthode** : `GET`
-- **URL** : `/api/promotions`
-- **Description** : Liste toutes les promotions actives (MMI1, MMI2, etc.).
+### 6. Liste des Promotions
+- **Méthode** : GET
+- **URL** : /api/promotions
+- **Rôle** : PUBLIC
+- **Description** : Liste toutes les promotions (MMI1, MMI2, etc.) ainsi que les archives historiques.
 
-### 6. Liste des Groupes
-- **Méthode** : `GET`
-- **URL** : `/api/groups`
+### 7. Liste des Groupes
+- **Méthode** : GET
+- **URL** : /api/groups
+- **Rôle** : PUBLIC
 - **Description** : Liste tous les groupes de TD/TP (GROUPEA1, etc.).
 
-### 7. Liste des Semestres
-- **Méthode** : `GET`
-- **URL** : `/api/semesters` (ou `/api/semester`)
+### 8. Liste des Semestres
+- **Méthode** : GET
+- **URL** : /api/semesters
+- **Rôle** : PUBLIC
 - **Description** : Liste les semestres avec leur promotion associée.
 
-### 7.5 Upload de Fichier (Direct)
-- **Méthode** : `POST`
-- **URL** : `/api/resources/upload`
-- **Sécurité** : `AuthGuard`, `RolesGuard`, `OnboardingGuard`
+### 9. Liste des Thématiques
+- **Méthode** : GET
+- **URL** : /api/saes/thematics
+- **Rôle** : PUBLIC
+- **Description** : Liste les thématiques disponibles (Développement Web, UX/UI, etc.).
+
+### 10. Liste des Bannières
+- **Méthode** : GET
+- **URL** : /api/saes/banners
+- **Rôle** : PUBLIC
+- **Description** : Récupère la liste des URLs de bannières prédéfinies pour les SAE.
+
+### 11. Upload de Fichier
+- **Méthode** : POST
+- **URL** : /api/resources/upload
+- **Rôle** : STUDENT (Rendu), TEACHER (Consignes/Ressources), ADMIN
+- **Sécurité** : AuthGuard, RolesGuard, OnboardingGuard
 - **Body (formData)** :
-  - `file` : Le fichier binaire.
-  - `saeId` : UUID de la SAE concernée (obligatoire).
-  - `type` : (Enseignants uniquement) `SUJET`, `RESOURCE` ou `AUTRE`.
-- **Description** : Upload le fichier vers UploadThing et crée/met à jour l'enregistrement correspondant en base de données selon le rôle (Document SAE pour les profs, Rendu pour les étudiants).
-- **Note** : En cas d'échec de l'enregistrement en base de données, le fichier est automatiquement supprimé d'UploadThing pour éviter les fichiers orphelins.
+  - file : Le fichier binaire.
+  - saeId : UUID de la SAE concernée.
+  - type : (Profs uniquement) SUJET, RESOURCE ou AUTRE.
+  - description : (Étudiants uniquement) Description du travail rendu.
+- **Description** : Gère l'upload vers le stockage distant et l'enregistrement en base de données.
 
 ---
 
-## 🚀 Module SAE (Situations d'Apprentissage et d'Évaluation)
+## Module SAE (Situations d'Apprentissage et d'Évaluation)
 
-### 8. Liste des Bannières (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/banners`
-- **Description** : Récupère la liste des URLs de bannières prédéfinies.
-
-### 9. Liste des SAE (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes`
+### 12. Liste des SAE Actuelles
+- **Méthode** : GET
+- **URL** : /api/saes
+- **Rôle** : PUBLIC (Promotions actuelles)
 - **Filtres (Query)** : 
-  - `semesterId` : Filtrer par semestre.
-  - `promotionId` : Filtrer par année/promotion (ex: MMI2).
-  - `groupId` : (Enseignants) Filtrer par groupe de TD.
-  - `status` : `draft`, `upcoming`, `ongoing`, `finished`.
-  - `isUrgent` : `true` pour voir les SAE finissant dans moins de 3 jours.
-  - `isPublished` : (Enseignants uniquement).
-- **Réponse (Champs calculés)** :
-  - `isSubmitted` : `true` si l'étudiant connecté a rendu son travail (uniquement pour sa promotion).
-  - `isUrgent` : `true` si l'échéance est proche (< 3 jours) et la SAE est en cours.
-  - `submissionCount` / `studentCount` : (Enseignants) État de l'avancement global ou par groupe.
+  - semesterId : Filtrer par semestre.
+  - promotionId : Filtrer par année/promotion.
+  - groupId : (Enseignants) Filtrer les statistiques par groupe.
+  - status : draft, upcoming, ongoing, finished.
+  - isUrgent : true pour voir les échéances proches (< 3 jours).
+- **Note** : Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
 
-### 10. Galerie des Archives (Hall of Fame)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/archives`
-- **Description** : Retourne les travaux des promotions précédentes pour la galerie graphique.
-- **Filtres (Query)** : `year` (ex: 2023).
-- **Réponse** : Liste d'objets incluant `title`, `year`, `thematic`, `imageUrl` (image), `url` (fichier rendu) et `studentName`.
+### 13. Galerie des Archives (Hall of Fame)
+- **Méthode** : GET
+- **URL** : /api/saes/archives
+- **Rôle** : PUBLIC
+- **Description** : Accès direct aux travaux passés avec images pour affichage graphique.
+- **Filtres (Query)** : year (ex: 2023).
+- **Réponse** : Liste d'objets incluant title, year, thematic, imageUrl (image), url (fichier rendu) et studentName.
 
-### 11. Détail d'une SAE (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:id`
-- **Note** : Retourne les mêmes champs calculés que la liste (`isSubmitted`, `isUrgent`, etc.).
+### 14. Détail d'une SAE
+- **Méthode** : GET
+- **URL** : /api/saes/:id
+- **Rôle** : PUBLIC (Si publiée), TEACHER/ADMIN (Toujours)
+- **Note** : Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
 
-### 11. Créer une SAE
-- **Méthode** : `POST`
-- **URL** : `/api/saes`
-- **Rôle** : `TEACHER`, `ADMIN`
-- **Note sur la réponse** : Les champs `bannerId` et `thematicId` sont supprimés de la réponse au profit des objets complets `banner` et `thematic`.
+### 15. Créer une SAE
+- **Méthode** : POST
+- **URL** : /api/saes
+- **Rôle** : TEACHER, ADMIN
 - **Body** :
 ```json
 {
-  "title": "Titre de la SAE",
-  "description": "Description détaillée",
-  "instructions": "Consignes de travail (optionnel)",
+  "title": "Titre",
+  "description": "Description",
+  "instructions": "Optionnel",
   "semesterId": "UUID",
   "thematicId": "UUID",
   "bannerId": "UUID",
@@ -136,119 +154,60 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 }
 ```
 
-### 12. Modifier une SAE
-- **Méthode** : `PATCH`
-- **URL** : `/api/saes/:id`
-- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
+### 16. Modifier une SAE
+- **Méthode** : PATCH
+- **URL** : /api/saes/:id
+- **Rôle** : TEACHER (Propriétaire), ADMIN
 
-### 13. Publier une SAE
-- **Méthode** : `POST`
-- **URL** : `/api/saes/:id/publish`
-- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
+### 17. Publier une SAE
+- **Méthode** : POST
+- **URL** : /api/saes/:id/publish
+- **Rôle** : TEACHER (Propriétaire), ADMIN
 
-### 14. Supprimer une SAE
-- **Méthode** : `DELETE`
-- **URL** : `/api/saes/:id`
-- **Rôle** : `TEACHER` (Propriétaire), `ADMIN`
+### 18. Supprimer une SAE
+- **Méthode** : DELETE
+- **URL** : /api/saes/:id
+- **Rôle** : TEACHER (Propriétaire), ADMIN
 
-### 15. Gestion des Invitations (Enseignants)
-- **POST** `/api/saes/:id/invitations` : Inviter un collègue.
-- **GET** `/api/saes/:id/invitations` : Voir les invités.
-- **DELETE** `/api/saes/:id/invitations/:invitationId` : Supprimer un invité (Propriétaire uniquement).
-
----
-
-## 📢 Module Annonces (Announcements)
-*Note : Toutes les routes sont relatives à une SAE spécifique.*
-
-### 16. Liste des Annonces (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:saeId/announcements`
-- **Description** : Liste toutes les annonces d'une SAE.
-- **Note** : Public pour les SAE publiées.
-
-### 17. Détail d'une Annonce (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:saeId/announcements/:id`
-
-### 18. Créer une Annonce
-- **Méthode** : `POST`
-- **URL** : `/api/saes/:saeId/announcements`
-- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
-- **Body** :
-```json
-{
-  "title": "Titre de l'annonce",
-  "content": "Contenu détaillé de l'annonce"
-}
-```
-
-### 19. Modifier une Annonce
-- **Méthode** : `PATCH`
-- **URL** : `/api/saes/:saeId/announcements/:id`
-- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
-
-### 20. Supprimer une Annonce
-- **Méthode** : `DELETE`
-- **URL** : `/api/saes/:saeId/announcements/:id`
-- **Rôle** : `TEACHER` (Propriétaire ou invité sur la SAE), `ADMIN`
+### 19. Gestion des Invitations
+- POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire).
+- GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire).
+- DELETE /api/saes/:id/invitations/:invitationId : Supprimer un invité (Rôle: TEACHER Propriétaire).
 
 ---
 
-## 📁 Module Documents (Ressources + Rendus)
-*Note : Toutes les routes sont relatives à une SAE spécifique.*
+## Module Annonces
 
-### 21. Liste des Documents SAE (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:saeId/documents`
-- **Description** : Liste les ressources ajoutées par les enseignants (consignes, exemples).
-- **Note** : Public pour les SAE publiées.
+### 20. Liste des Annonces
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/announcements
+- **Rôle** : PUBLIC (Si SAE publiée)
 
-### 22. Ajouter un Document SAE
-- **Méthode** : `POST`
-- **URL** : `/api/saes/:saeId/documents`
-- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`
-- **Body** :
-```json
-{
-  "url": "https://...",
-  "name": "Sujet_SAE.pdf",
-  "mimeType": "application/pdf",
-  "type": "INSTRUCTION" // Ou "RESOURCE", "EXAMPLE"
-}
-```
-- **Note** : Limité à 3 documents par SAE.
+### 21. Détail d'une Annonce
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/announcements/:id
+- **Rôle** : PUBLIC (Si SAE publiée)
 
-### 23. Supprimer un Document SAE
-- **Méthode** : `DELETE`
-- **URL** : `/api/saes/:saeId/documents/:documentId`
-- **Rôle** : `TEACHER` (Propriétaire ou invité), `ADMIN`
+### 22. Gérer les Annonces
+- POST /api/saes/:saeId/announcements : Créer (Rôle: TEACHER Propriétaire/Invité).
+- PATCH /api/saes/:saeId/announcements/:id : Modifier (Rôle: TEACHER Propriétaire/Invité).
+- DELETE /api/saes/:saeId/announcements/:id : Supprimer (Rôle: TEACHER Propriétaire/Invité).
 
-### 24. Soumettre un Rendu Étudiant
-- **Méthode** : `POST`
-- **URL** : `/api/saes/:saeId/submission`
-- **Rôle** : `STUDENT` (de la promotion concernée)
-- **Condition** : La SAE doit être en cours (`ongoing`).
-- **Body** :
-```json
-{
-  "url": "https://...",
-  "name": "Rendu_GroupeA.zip",
-  "mimeType": "application/zip",
-  "description": "Une description détaillée du travail effectué.",
-  "imageUrl": "https://... (optionnel)"
-}
-```
-- **Note** : Un seul rendu par étudiant, écrase le précédent si renvoyé.
+---
 
-### 25. Consulter son propre Rendu
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:saeId/submission/me`
-- **Rôle** : `STUDENT`
+## Module Documents et Rendus
 
-### 26. Liste de tous les Rendus (Public)
-- **Méthode** : `GET`
-- **URL** : `/api/saes/:saeId/submissions`
-- **Description** : Liste tous les rendus déposés par les étudiants pour cette SAE.
-- **Réponse** : Inclut désormais `studentName` au lieu de `studentId`.
-- **Note** : Public pour les SAE publiées.
+### 23. Documents SAE (Enseignants)
+- GET /api/saes/:saeId/documents : Consulter (Rôle: PUBLIC si SAE publiée).
+- POST /api/saes/:saeId/documents : Ajouter (Rôle: TEACHER Propriétaire/Invité).
+- DELETE /api/saes/:saeId/documents/:documentId : Supprimer (Rôle: TEACHER Propriétaire/Invité).
+
+### 24. Rendus (Étudiants)
+- POST /api/saes/:saeId/submission : Déposer/Mettre à jour son travail (Rôle: STUDENT de la promotion concernée).
+- GET /api/saes/:saeId/submission/me : Consulter son propre rendu (Rôle: STUDENT concerné).
+
+### 25. Liste des Rendus
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/submissions
+- **Rôle** : PUBLIC (Si SAE publiée)
+- **Description** : Liste des travaux avec studentName, imageUrl et description pour la galerie.
