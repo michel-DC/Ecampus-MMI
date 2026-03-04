@@ -208,6 +208,7 @@ export class SaesService {
       thematic: sae.thematic.label,
       description: sae.description,
       imageUrl: sae.submissions[0]?.imageUrl,
+      url: sae.submissions[0]?.url,
       studentName: sae.submissions[0]?.student.name,
     }));
   }
@@ -585,6 +586,32 @@ export class SaesService {
       name: inv.user.name,
       createdAt: inv.createdAt,
     }));
+  }
+
+  async removeInvitation(
+    saeId: string,
+    invitationId: string,
+    requestingUserId: string,
+  ): Promise<void> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+      select: { createdById: true },
+    });
+
+    if (!sae) throw new NotFoundException('SAE non trouvée');
+    this.assertIsOwner(sae.createdById, requestingUserId);
+
+    const invitation = await this.prisma.saeInvitation.findUnique({
+      where: { id: invitationId },
+    });
+
+    if (!invitation || invitation.saeId !== saeId) {
+      throw new NotFoundException('Invitation non trouvée pour cette SAE');
+    }
+
+    await this.prisma.saeInvitation.delete({
+      where: { id: invitationId },
+    });
   }
 
   private validateDates(startDate: string, dueDate: string): void {

@@ -110,7 +110,7 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **URL** : `/api/saes/archives`
 - **Description** : Retourne les travaux des promotions précédentes pour la galerie graphique.
 - **Filtres (Query)** : `year` (ex: 2023).
-- **Réponse** : Liste d'objets incluant `title`, `year`, `thematic`, `imageUrl` (image du rendu) et `studentName`.
+- **Réponse** : Liste d'objets incluant `title`, `year`, `thematic`, `imageUrl` (image), `url` (fichier rendu) et `studentName`.
 
 ### 11. Détail d'une SAE (Public)
 - **Méthode** : `GET`
@@ -154,6 +154,7 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 ### 15. Gestion des Invitations (Enseignants)
 - **POST** `/api/saes/:id/invitations` : Inviter un collègue.
 - **GET** `/api/saes/:id/invitations` : Voir les invités.
+- **DELETE** `/api/saes/:id/invitations/:invitationId` : Supprimer un invité (Propriétaire uniquement).
 
 ---
 
@@ -249,4 +250,5 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:saeId/submissions`
 - **Description** : Liste tous les rendus déposés par les étudiants pour cette SAE.
+- **Réponse** : Inclut désormais `studentName` au lieu de `studentId`.
 - **Note** : Public pour les SAE publiées.

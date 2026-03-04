@@ -188,12 +188,13 @@ export class DocumentsService {
         imageUrl: dto.imageUrl,
         submittedAt: new Date(),
       },
+      include: { student: { select: { name: true } } },
     });
 
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentId: submission.studentId,
+      studentName: submission.student.name,
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
@@ -210,6 +211,7 @@ export class DocumentsService {
   ): Promise<StudentSubmissionResponse> {
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { saeId_studentId: { saeId, studentId } },
+      include: { student: { select: { name: true } } },
     });
 
     if (!submission)
@@ -218,7 +220,7 @@ export class DocumentsService {
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentId: submission.studentId,
+      studentName: submission.student.name,
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
@@ -250,13 +252,14 @@ export class DocumentsService {
 
     const submissions = await this.prisma.studentSubmission.findMany({
       where: { saeId },
+      include: { student: { select: { name: true } } },
       orderBy: { submittedAt: 'desc' },
     });
 
     return submissions.map((s) => ({
       id: s.id,
       saeId: s.saeId,
-      studentId: s.studentId,
+      studentName: s.student.name,
       url: s.url,
       name: s.name,
       mimeType: s.mimeType,

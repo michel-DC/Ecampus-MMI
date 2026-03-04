@@ -33,6 +33,7 @@ export interface SaeArchiveResponse {
   thematic: string;
   description: string;
   imageUrl?: string | null; // Image du rendu phare
+  url?: string | null;      // Lien vers le rendu phare
   studentName?: string;
 }
 

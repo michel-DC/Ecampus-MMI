@@ -129,4 +129,16 @@ export class SaesController {
     const result = await this.saesService.findInvitations(id, user.sub);
     return { success: true, data: result };
   }
+
+  @Delete(':id/invitations/:invitationId')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  async removeInvitation(
+    @Param('id') id: string,
+    @Param('invitationId') invitationId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<any> {
+    await this.saesService.removeInvitation(id, invitationId, user.sub);
+    return { success: true, message: 'Invitation supprimée avec succès' };
+  }
 }

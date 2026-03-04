@@ -13,7 +13,7 @@ export interface SaeDocumentResponse {
 export interface StudentSubmissionResponse {
   id: string;
   saeId: string;
-  studentId: string;
+  studentName: string;
   url: string;
   name: string;
   mimeType: string;
