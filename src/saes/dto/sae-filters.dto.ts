@@ -12,6 +12,11 @@ export class SaeFiltersDto {
   @Transform(({ value }: { value: string }) => value === 'true')
   isPublished?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  @Transform(({ value }: { value: string }) => value === 'true')
+  isUrgent?: boolean;
+
   @IsEnum(['draft', 'upcoming', 'ongoing', 'finished'])
   @IsOptional()
   status?: SaeStatus;

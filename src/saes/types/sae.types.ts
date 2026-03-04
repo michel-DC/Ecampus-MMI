@@ -20,16 +20,16 @@ export interface SaeBanner {
 export interface SaeResponse {
   id: string;
   title: string;
-  bannerId: string;
   banner: SaeBanner;
   description: string;
   instructions?: string | null;
   semesterId: string;
-  thematicId: string;
   thematic: SaeThematic;
   startDate: Date;
   dueDate: Date;
   isPublished: boolean;
+  isSubmitted?: boolean;
+  isUrgent: boolean;
   status: SaeStatus;
   createdBy: SaeAuthor;
   createdAt: Date;

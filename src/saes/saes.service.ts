@@ -30,6 +30,16 @@ export class SaesService {
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
       requestingUserRole === UserRole.ADMIN;
+    const isStudent = requestingUserRole === UserRole.STUDENT;
+
+    let studentPromotionId: string | undefined;
+    if (isStudent && requestingUserId) {
+      const profile = await this.prisma.studentProfile.findUnique({
+        where: { userId: requestingUserId },
+        select: { promotionId: true },
+      });
+      studentPromotionId = profile?.promotionId;
+    }
 
     const saes = await this.prisma.sae.findMany({
       where: {
@@ -41,32 +51,58 @@ export class SaesService {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
+        semester: { select: { promotionId: true } },
+        submissions: isStudent
+          ? { where: { studentId: requestingUserId }, select: { id: true } }
+          : false,
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    const mapped: SaeResponse[] = saes.map((sae) => ({
-      id: sae.id,
-      title: sae.title,
-      bannerId: sae.bannerId,
-      banner: sae.banner,
-      description: sae.description,
-      instructions: sae.instructions,
-      semesterId: sae.semesterId,
-      thematicId: sae.thematicId,
-      thematic: sae.thematic,
-      startDate: sae.startDate,
-      dueDate: sae.dueDate,
-      isPublished: sae.isPublished,
-      status: computeSaeStatus(sae),
-      createdBy: sae.createdBy,
-      createdAt: sae.createdAt,
-      updatedAt: sae.updatedAt,
-    }));
+    const mapped: SaeResponse[] = saes.map((sae) => {
+      const isHisPromotion = isStudent && sae.semester.promotionId === studentPromotionId;
+      const status = computeSaeStatus(sae);
+      
+      const now = new Date();
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(now.getDate() + 3);
+      const isUrgent = status === 'ongoing' && sae.dueDate <= threeDaysFromNow;
 
-    const filtered = filters.status
-      ? mapped.filter((sae) => sae.status === filters.status)
-      : mapped;
+      return {
+        id: sae.id,
+        title: sae.title,
+        banner: sae.banner,
+        description: sae.description,
+        instructions: sae.instructions,
+        semesterId: sae.semesterId,
+        thematic: sae.thematic,
+        startDate: sae.startDate,
+        dueDate: sae.dueDate,
+        isPublished: sae.isPublished,
+        isSubmitted: isHisPromotion ? sae.submissions.length > 0 : undefined,
+        isUrgent,
+        status,
+        createdBy: sae.createdBy,
+        createdAt: sae.createdAt,
+        updatedAt: sae.updatedAt,
+      };
+    });
+
+    let filtered = mapped;
+
+    if (filters.status) {
+      filtered = filtered.filter((sae) => sae.status === filters.status);
+    }
+
+    if (filters.isUrgent) {
+      const now = new Date();
+      const threeDaysFromNow = new Date();
+      threeDaysFromNow.setDate(now.getDate() + 3);
+
+      filtered = filtered.filter(
+        (sae) => sae.dueDate >= now && sae.dueDate <= threeDaysFromNow,
+      );
+    }
 
     return { data: filtered, total: filtered.length };
   }
@@ -79,6 +115,16 @@ export class SaesService {
     const isTeacherOrAdmin =
       requestingUserRole === UserRole.TEACHER ||
       requestingUserRole === UserRole.ADMIN;
+    const isStudent = requestingUserRole === UserRole.STUDENT;
+
+    let studentPromotionId: string | undefined;
+    if (isStudent && requestingUserId) {
+      const profile = await this.prisma.studentProfile.findUnique({
+        where: { userId: requestingUserId },
+        select: { promotionId: true },
+      });
+      studentPromotionId = profile?.promotionId;
+    }
 
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
@@ -86,6 +132,10 @@ export class SaesService {
         createdBy: { select: { id: true, name: true, email: true } },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
+        semester: { select: { promotionId: true } },
+        submissions: isStudent
+          ? { where: { studentId: requestingUserId }, select: { id: true } }
+          : false,
       },
     });
 
@@ -95,20 +145,28 @@ export class SaesService {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
+    const isHisPromotion = isStudent && sae.semester.promotionId === studentPromotionId;
+    const status = computeSaeStatus(sae);
+    
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+    const isUrgent = status === 'ongoing' && sae.dueDate <= threeDaysFromNow;
+
     return {
       id: sae.id,
       title: sae.title,
-      bannerId: sae.bannerId,
       banner: sae.banner,
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
-      thematicId: sae.thematicId,
       thematic: sae.thematic,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
-      status: computeSaeStatus(sae),
+      isSubmitted: isHisPromotion ? sae.submissions.length > 0 : undefined,
+      isUrgent,
+      status,
       createdBy: sae.createdBy,
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
@@ -153,20 +211,25 @@ export class SaesService {
       },
     });
 
+    const status = computeSaeStatus(sae);
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+    const isUrgent = status === 'ongoing' && sae.dueDate <= threeDaysFromNow;
+
     return {
       id: sae.id,
       title: sae.title,
-      bannerId: sae.bannerId,
       banner: sae.banner,
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
-      thematicId: sae.thematicId,
       thematic: sae.thematic,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
       isPublished: sae.isPublished,
-      status: computeSaeStatus(sae),
+      isUrgent,
+      status,
       createdBy: sae.createdBy,
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
@@ -225,20 +288,25 @@ export class SaesService {
       },
     });
 
+    const status = computeSaeStatus(updated);
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+    const isUrgent = status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
+
     return {
       id: updated.id,
       title: updated.title,
-      bannerId: updated.bannerId,
       banner: updated.banner,
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
-      thematicId: updated.thematicId,
       thematic: updated.thematic,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,
-      status: computeSaeStatus(updated),
+      isUrgent,
+      status,
       createdBy: updated.createdBy,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
@@ -270,20 +338,25 @@ export class SaesService {
       },
     });
 
+    const status = computeSaeStatus(updated);
+    const now = new Date();
+    const threeDaysFromNow = new Date();
+    threeDaysFromNow.setDate(now.getDate() + 3);
+    const isUrgent = status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
+
     return {
       id: updated.id,
       title: updated.title,
-      bannerId: updated.bannerId,
       banner: updated.banner,
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
-      thematicId: updated.thematicId,
       thematic: updated.thematic,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
       isPublished: updated.isPublished,
-      status: computeSaeStatus(updated),
+      isUrgent,
+      status,
       createdBy: updated.createdBy,
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
