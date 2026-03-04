@@ -26,7 +26,7 @@ export class OnboardingGuard implements CanActivate {
 
     if (!studentProfile) {
       throw new ForbiddenException(
-        "Vous devez compléter votre profil (onboarding) pour accéder à cette ressource",
+        'Vous devez compléter votre profil (onboarding) pour accéder à cette ressource',
       );
     }
 

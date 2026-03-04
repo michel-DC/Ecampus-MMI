@@ -10,7 +10,15 @@ import { ResourcesModule } from './resources/resources.module';
 import { DocumentsModule } from './documents/documents.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, AuthModule, SaesModule, AnnouncementsModule, ResourcesModule, DocumentsModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    AuthModule,
+    SaesModule,
+    AnnouncementsModule,
+    ResourcesModule,
+    DocumentsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

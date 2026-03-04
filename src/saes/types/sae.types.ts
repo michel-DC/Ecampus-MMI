@@ -26,6 +26,16 @@ export interface SaeResponse {
   updatedAt: Date;
 }
 
+export interface SaeArchiveResponse {
+  id: string;
+  title: string;
+  year: number;
+  thematic: string;
+  description: string;
+  imageUrl?: string | null; // Image du rendu phare
+  studentName?: string;
+}
+
 export interface SaeListResponse {
   data: SaeResponse[];
   total: number;

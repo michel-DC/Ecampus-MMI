@@ -105,10 +105,11 @@ model TeacherProfile {
 }
 
 model Promotion {
-  id        String  @id @default(uuid())
-  label     String
-  yearLevel Int
-  isActive  Boolean @default(true)
+  id           String  @id @default(uuid())
+  label        String
+  yearLevel    Int?
+  academicYear Int?
+  isActive     Boolean @default(true)
 
   semesters Semester[]
   students  StudentProfile[]

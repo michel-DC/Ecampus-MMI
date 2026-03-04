@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
 
     const session = await auth.api.getSession({
-      headers: request.headers as Headers,
+      headers: request.headers,
     });
 
     if (!session || !session.user) {

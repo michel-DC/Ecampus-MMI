@@ -43,6 +43,14 @@ export class SaesController {
     return { success: true, ...result };
   }
 
+  @Get('archives')
+  async findArchives(@Query('year') year?: string): Promise<any> {
+    const result = await this.saesService.findArchives(
+      year ? parseInt(year, 10) : undefined,
+    );
+    return { success: true, data: result };
+  }
+
   @Get(':id')
   @UseGuards(OptionalAuthGuard)
   async findOne(

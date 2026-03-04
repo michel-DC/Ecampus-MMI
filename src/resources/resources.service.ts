@@ -64,7 +64,9 @@ export class ResourcesService {
     try {
       if (role === UserRole.STUDENT) {
         if (!dto.description) {
-          throw new BadRequestException('La description est obligatoire pour un rendu');
+          throw new BadRequestException(
+            'La description est obligatoire pour un rendu',
+          );
         }
 
         return await this.documentsService.submitDocument(

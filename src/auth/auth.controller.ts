@@ -29,7 +29,10 @@ export class AuthController {
   @Get('test')
   test() {
     this.logger.log('Test route reached');
-    return { success: true, message: "L'authentification fonctionne correctement" };
+    return {
+      success: true,
+      message: "L'authentification fonctionne correctement",
+    };
   }
 
   @Get('me')
@@ -55,7 +58,7 @@ export class AuthController {
   @Get('*path')
   async handleAuth(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.logger.log(`Better Auth handler reached: ${req.method} ${req.url}`);
-    
+
     // Pour intercepter et modifier la réponse JSON si c'est un succès
     const originalJson = res.json.bind(res);
     res.json = (body: any) => {

@@ -32,7 +32,7 @@ export class AnnouncementsService {
       requestingUserRole === UserRole.ADMIN;
 
     if (!sae.isPublished && !isTeacherOrAdmin) {
-      throw new ForbiddenException('Cette SAE n\'est pas encore publiée');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     const announcements = await this.prisma.announcement.findMany({
@@ -72,7 +72,7 @@ export class AnnouncementsService {
       requestingUserRole === UserRole.ADMIN;
 
     if (!announcement.sae.isPublished && !isTeacherOrAdmin) {
-      throw new ForbiddenException('Cette SAE n\'est pas encore publiée');
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     return {
@@ -210,7 +210,9 @@ export class AnnouncementsService {
     );
 
     if (!isOwner && !isInvited) {
-      throw new ForbiddenException('Vous n\'avez pas les droits d\'écriture sur cette SAE');
+      throw new ForbiddenException(
+        "Vous n'avez pas les droits d'écriture sur cette SAE",
+      );
     }
   }
 }

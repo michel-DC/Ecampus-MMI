@@ -95,6 +95,7 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
 - **URL** : `/api/saes`
 - **Filtres (Query)** : 
   - `semesterId` : Filtrer par semestre.
+  - `promotionId` : Filtrer par année/promotion (ex: MMI2).
   - `groupId` : (Enseignants) Filtrer par groupe de TD.
   - `status` : `draft`, `upcoming`, `ongoing`, `finished`.
   - `isUrgent` : `true` pour voir les SAE finissant dans moins de 3 jours.
@@ -104,7 +105,14 @@ Les routes d'authentification de base sont gérées par **Better Auth**.
   - `isUrgent` : `true` si l'échéance est proche (< 3 jours) et la SAE est en cours.
   - `submissionCount` / `studentCount` : (Enseignants) État de l'avancement global ou par groupe.
 
-### 10. Détail d'une SAE (Public)
+### 10. Galerie des Archives (Hall of Fame)
+- **Méthode** : `GET`
+- **URL** : `/api/saes/archives`
+- **Description** : Retourne les travaux des promotions précédentes pour la galerie graphique.
+- **Filtres (Query)** : `year` (ex: 2023).
+- **Réponse** : Liste d'objets incluant `title`, `year`, `thematic`, `imageUrl` (image du rendu) et `studentName`.
+
+### 11. Détail d'une SAE (Public)
 - **Méthode** : `GET`
 - **URL** : `/api/saes/:id`
 - **Note** : Retourne les mêmes champs calculés que la liste (`isSubmitted`, `isUrgent`, etc.).

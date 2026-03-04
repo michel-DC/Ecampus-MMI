@@ -150,7 +150,7 @@ export class DocumentsService {
     const status = computeSaeStatus(sae);
     if (status !== 'ongoing') {
       throw new BadRequestException(
-        "Les rendus ne sont autorisés que lorsque la SAE est en cours",
+        'Les rendus ne sont autorisés que lorsque la SAE est en cours',
       );
     }
 
@@ -160,7 +160,7 @@ export class DocumentsService {
     });
 
     if (!studentProfile) {
-      throw new ForbiddenException("Profil étudiant non trouvé");
+      throw new ForbiddenException('Profil étudiant non trouvé');
     }
 
     if (sae.semester.promotionId !== studentProfile.promotionId) {
@@ -213,7 +213,7 @@ export class DocumentsService {
     });
 
     if (!submission)
-      throw new NotFoundException("Aucun rendu trouvé pour cette SAE");
+      throw new NotFoundException('Aucun rendu trouvé pour cette SAE');
 
     return {
       id: submission.id,
@@ -278,7 +278,9 @@ export class DocumentsService {
     );
 
     if (!isOwner && !isInvited) {
-      throw new ForbiddenException("Vous n'avez pas les droits d'écriture sur cette SAE");
+      throw new ForbiddenException(
+        "Vous n'avez pas les droits d'écriture sur cette SAE",
+      );
     }
   }
 }

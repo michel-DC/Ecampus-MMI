@@ -9,6 +9,10 @@ export class SaeFiltersDto {
 
   @IsUUID()
   @IsOptional()
+  promotionId?: string;
+
+  @IsUUID()
+  @IsOptional()
   groupId?: string;
 
   @IsBoolean()

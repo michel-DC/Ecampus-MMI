@@ -12,6 +12,7 @@ import { UpdateSaeDto } from './dto/update-sae.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { SaeFiltersDto } from './dto/sae-filters.dto';
 import {
+  SaeArchiveResponse,
   SaeInvitationResponse,
   SaeListResponse,
   SaeResponse,
@@ -46,6 +47,15 @@ export class SaesService {
         deletedAt: null,
         semesterId: filters.semesterId,
         isPublished: isTeacherOrAdmin ? filters.isPublished : true,
+        semester: {
+          promotion: {
+            id: filters.promotionId,
+            academicYear: filters.promotionId ? undefined : null, // Par défaut, on ne prend que les promos actuelles
+            students: filters.groupId
+              ? { some: { groupId: filters.groupId } }
+              : undefined,
+          },
+        },
       },
       include: {
         createdBy: { select: { id: true, name: true, email: true } },
@@ -62,9 +72,15 @@ export class SaesService {
                         studentProfile: {
                           groupId: filters.groupId,
                           // On s'assure que l'étudiant est bien dans la promotion de la SAE
-                          promotion: { semesters: { some: { saes: { some: { id: { not: undefined } } } } } }
-                        }
-                      }
+                          promotion: {
+                            semesters: {
+                              some: {
+                                saes: { some: { id: { not: undefined } } },
+                              },
+                            },
+                          },
+                        },
+                      },
                     }
                   : undefined,
                 select: { id: true },
@@ -88,13 +104,13 @@ export class SaesService {
             // On doit aussi refiltrer les submissions pour qu'elles correspondent au groupe si présent
             let submissionCount = sae.submissions.length;
             if (filters.groupId) {
-                // Si un groupe est filtré, on doit recompter les submissions pour ce groupe précis
-                submissionCount = await this.prisma.studentSubmission.count({
-                    where: {
-                        saeId: sae.id,
-                        student: { studentProfile: { groupId: filters.groupId } }
-                    }
-                });
+              // Si un groupe est filtré, on doit recompter les submissions pour ce groupe précis
+              submissionCount = await this.prisma.studentSubmission.count({
+                where: {
+                  saeId: sae.id,
+                  student: { studentProfile: { groupId: filters.groupId } },
+                },
+              });
             }
 
             return { saeId: sae.id, studentCount: count, submissionCount };
@@ -127,7 +143,9 @@ export class SaesService {
         isPublished: sae.isPublished,
         isSubmitted: isHisPromotion ? sae.submissions.length > 0 : undefined,
         isUrgent,
-        submissionCount: isTeacherOrAdmin ? saeStats?.submissionCount : undefined,
+        submissionCount: isTeacherOrAdmin
+          ? saeStats?.submissionCount
+          : undefined,
         studentCount: isTeacherOrAdmin ? saeStats?.studentCount : undefined,
         status,
         createdBy: {
@@ -156,6 +174,42 @@ export class SaesService {
     }
 
     return { data: filtered, total: filtered.length };
+  }
+
+  async findArchives(year?: number): Promise<SaeArchiveResponse[]> {
+    const saes = await this.prisma.sae.findMany({
+      where: {
+        deletedAt: null,
+        isPublished: true,
+        semester: {
+          promotion: {
+            academicYear: year ? year : { not: null }, // Si year non fourni, on prend toutes les archives
+          },
+        },
+      },
+      include: {
+        thematic: { select: { label: true } },
+        semester: {
+          include: { promotion: { select: { academicYear: true } } },
+        },
+        submissions: {
+          where: { imageUrl: { not: null } },
+          take: 1,
+          include: { student: { select: { name: true } } },
+        },
+      },
+      orderBy: { semester: { promotion: { academicYear: 'desc' } } },
+    });
+
+    return saes.map((sae) => ({
+      id: sae.id,
+      title: sae.title,
+      year: sae.semester.promotion.academicYear as number,
+      thematic: sae.thematic.label,
+      description: sae.description,
+      imageUrl: sae.submissions[0]?.imageUrl,
+      studentName: sae.submissions[0]?.student.name,
+    }));
   }
 
   async findOne(
@@ -198,9 +252,10 @@ export class SaesService {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
-    const isHisPromotion = isStudent && sae.semester.promotionId === studentPromotionId;
+    const isHisPromotion =
+      isStudent && sae.semester.promotionId === studentPromotionId;
     const status = computeSaeStatus(sae);
-    
+
     const now = new Date();
     const threeDaysFromNow = new Date();
     threeDaysFromNow.setDate(now.getDate() + 3);
@@ -359,7 +414,8 @@ export class SaesService {
     const now = new Date();
     const threeDaysFromNow = new Date();
     threeDaysFromNow.setDate(now.getDate() + 3);
-    const isUrgent = status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
+    const isUrgent =
+      status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
 
     return {
       id: updated.id,
@@ -412,7 +468,8 @@ export class SaesService {
     const now = new Date();
     const threeDaysFromNow = new Date();
     threeDaysFromNow.setDate(now.getDate() + 3);
-    const isUrgent = status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
+    const isUrgent =
+      status === 'ongoing' && updated.dueDate <= threeDaysFromNow;
 
     return {
       id: updated.id,
