@@ -60,6 +60,17 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+### 5bis. Recherche d'Utilisateurs
+- **Méthode** : GET
+- **URL** : /api/users
+- **Rôle** : TEACHER, ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Filtres (Query)** :
+  - q : Recherche par nom ou email (insensible à la casse).
+  - role : Filtrer par STUDENT, TEACHER ou ADMIN.
+  - limit : Nombre de résultats (défaut: 20).
+- **Description** : Permet de trouver un utilisateur pour l'inviter dans une SAE ou consulter son profil.
+
 ---
 
 ## Ressources Pédagogiques

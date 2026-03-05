@@ -8,6 +8,7 @@ import { SaesModule } from './saes/saes.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { ResourcesModule } from './resources/resources.module';
 import { DocumentsModule } from './documents/documents.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { DocumentsModule } from './documents/documents.module';
     AnnouncementsModule,
     ResourcesModule,
     DocumentsModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
