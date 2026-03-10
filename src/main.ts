@@ -13,7 +13,7 @@ async function bootstrap(): Promise<void> {
     }),
   );
 
-  await app.listen(process.env.PORT ?? 8080);
+  await app.listen(process.env.PORT || 8080, '0.0.0.0');
 }
 
 bootstrap();
