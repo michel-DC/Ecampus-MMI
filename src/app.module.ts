@@ -9,11 +9,13 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { ResourcesModule } from './resources/resources.module';
 import { DocumentsModule } from './documents/documents.module';
 import { UsersModule } from './users/users.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
+    MailModule,
     AuthModule,
     SaesModule,
     AnnouncementsModule,

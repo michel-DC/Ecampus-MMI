@@ -70,7 +70,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 5bis. Recherche d'Utilisateurs
+### 6. Recherche d'Utilisateurs
 
 - **Méthode** : GET
 - **URL** : /api/users
@@ -81,6 +81,39 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - role : Filtrer par STUDENT, TEACHER ou ADMIN.
   - limit : Nombre de résultats (défaut: 20).
 - **Description** : Permet de trouver un utilisateur pour l'inviter dans une SAE ou consulter son profil.
+
+### 7. Créer un Compte Professeur
+
+- **Méthode** : POST
+- **URL** : /api/auth/sign-up/teacher
+- **Rôle** : ADMIN uniquement
+- **Sécurité** : AuthGuard, RolesGuard
+- **Body** :
+
+```json
+{
+  "email": "prof@example.com",
+  "firstname": "Jean",
+  "lastname": "Dupont"
+}
+```
+
+- **Description** : Crée un compte professeur avec un mot de passe temporaire généré automatiquement. Un email est envoyé au professeur avec ses identifiants.
+
+### 8. Changer son Mot de Passe
+
+- **Méthode** : POST
+- **URL** : /api/auth/change-password
+- **Rôle** : Authentifié (Tous rôles)
+- **Sécurité** : AuthGuard
+- **Body** :
+
+```json
+{
+  "oldPassword": "ancien_mot_de_passe",
+  "newPassword": "nouveau_mot_de_passe"
+}
+```
 
 ---
 
@@ -171,7 +204,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Méthode** : POST
 - **URL** : /api/saes
-- **Rôle** : TEACHER, ADMIN
+- **Rôle** : **ADMIN uniquement**
 - **Body** :
 
 ```json
@@ -180,6 +213,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   "description": "Description",
   "instructions": "Optionnel",
   "semesterId": "UUID",
+  "teacherId": "UUID",
   "thematicId": "UUID",
   "bannerId": "UUID",
   "startDate": "2026-03-01T08:00:00Z",
@@ -187,29 +221,34 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+- **Note** : L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
+
 ### 16. Modifier une SAE
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:id
-- **Rôle** : TEACHER (Propriétaire), ADMIN
+- **Rôle** : TEACHER (Propriétaire uniquement), ADMIN
+- **Note** : Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
 
 ### 17. Publier une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes/:id/publish
 - **Rôle** : TEACHER (Propriétaire), ADMIN
+- **Note** : Un professeur peut publier uniquement les SAE dont il est propriétaire. Un ADMIN peut publier toutes les SAE.
 
 ### 18. Supprimer une SAE
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:id
-- **Rôle** : TEACHER (Propriétaire), ADMIN
+- **Rôle** : **ADMIN uniquement**
 
 ### 19. Gestion des Invitations
 
-- POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire).
-- GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire).
-- DELETE /api/saes/:id/invitations/:invitationId : Supprimer un invité (Rôle: TEACHER Propriétaire).
+- POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire, ADMIN).
+- GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire, ADMIN).
+- DELETE /api/saes/:id/invitations/:invitationId : Supprimer un invité (Rôle: TEACHER Propriétaire, ADMIN).
+- **Note** : Un TEACHER ne peut gérer les invitations que pour les SAE dont il est propriétaire. Un ADMIN peut gérer les invitations de toutes les SAE.
 
 ---
 

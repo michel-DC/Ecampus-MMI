@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+import { JwtPayload } from '../auth/types/auth.types';
 import { CreateSaeDto } from './dto/create-sae.dto';
 import { UpdateSaeDto } from './dto/update-sae.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -309,13 +310,31 @@ export class SaesService {
     };
   }
 
-  async create(dto: CreateSaeDto, createdById: string): Promise<SaeResponse> {
+  async create(
+    dto: CreateSaeDto,
+    requestingUser: JwtPayload,
+  ): Promise<SaeResponse> {
     this.validateDates(dto.startDate, dto.dueDate);
 
     const semester = await this.prisma.semester.findUnique({
       where: { id: dto.semesterId },
     });
     if (!semester) throw new NotFoundException('Semestre non trouvé');
+
+    const teacher = await this.prisma.user.findUnique({
+      where: { id: dto.teacherId },
+      select: { id: true, role: true, isActive: true },
+    });
+
+    if (!teacher || !teacher.isActive) {
+      throw new NotFoundException('Teacher not found or inactive');
+    }
+
+    if (teacher.role !== UserRole.TEACHER) {
+      throw new BadRequestException(
+        'The assigned user must have the TEACHER role',
+      );
+    }
 
     const thematic = await this.prisma.thematic.findUnique({
       where: { id: dto.thematicId },
@@ -338,7 +357,7 @@ export class SaesService {
         startDate: new Date(dto.startDate),
         dueDate: new Date(dto.dueDate),
         isPublished: dto.isPublished ?? false,
-        createdById,
+        createdById: dto.teacherId,
       },
       include: {
         createdBy: {
@@ -384,14 +403,14 @@ export class SaesService {
   async update(
     id: string,
     dto: UpdateSaeDto,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     if (dto.startDate || dto.dueDate) {
       const startDate = dto.startDate ?? sae.startDate.toISOString();
@@ -468,13 +487,13 @@ export class SaesService {
     };
   }
 
-  async publish(id: string, requestingUserId: string): Promise<SaeResponse> {
+  async publish(id: string, requestingUser: JwtPayload): Promise<SaeResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     if (sae.isPublished) throw new ConflictException('La SAE est déjà publiée');
     if (!sae.startDate || !sae.dueDate) {
@@ -528,13 +547,13 @@ export class SaesService {
     };
   }
 
-  async remove(id: string, requestingUserId: string): Promise<void> {
+  async remove(id: string, requestingUser: JwtPayload): Promise<void> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     await this.prisma.sae.update({
       where: { id },
@@ -545,14 +564,14 @@ export class SaesService {
   async createInvitation(
     saeId: string,
     dto: CreateInvitationDto,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeInvitationResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const targetUser = await this.prisma.user.findUnique({
       where: { id: dto.userId },
@@ -575,7 +594,7 @@ export class SaesService {
       );
     }
 
-    if (targetUser.id === requestingUserId) {
+    if (targetUser.id === requestingUser.sub) {
       throw new BadRequestException(
         'Vous ne pouvez pas vous inviter vous-même',
       );
@@ -604,14 +623,14 @@ export class SaesService {
 
   async findInvitations(
     saeId: string,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeInvitationResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const invitations = await this.prisma.saeInvitation.findMany({
       where: { saeId },
@@ -631,7 +650,7 @@ export class SaesService {
   async removeInvitation(
     saeId: string,
     invitationId: string,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<void> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
@@ -639,7 +658,7 @@ export class SaesService {
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const invitation = await this.prisma.saeInvitation.findUnique({
       where: { id: invitationId },
@@ -669,10 +688,13 @@ export class SaesService {
     }
   }
 
-  private assertIsOwner(createdById: string, requestingUserId: string): void {
-    if (createdById !== requestingUserId) {
+  private assertIsOwner(createdById: string, requestingUser: JwtPayload): void {
+    const isAdmin = requestingUser.role === UserRole.ADMIN;
+    const isOwner = createdById === requestingUser.sub;
+
+    if (!isAdmin && !isOwner) {
       throw new ForbiddenException(
-        "Vous n'êtes pas le propriétaire de cette SAE",
+        'Action reserved for ADMIN or the SAE owner',
       );
     }
   }

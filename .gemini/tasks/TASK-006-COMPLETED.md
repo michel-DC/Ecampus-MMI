@@ -1,9 +1,7 @@
 # TASK-006 — Séparation du Nom et Prénom Utilisateur — TERMINÉ ✅
 
-## Date de complétion
-11 Mars 2026
-
 ## Résumé
+
 Le champ générique `name` a été remplacé par deux champs distincts : `firstname` (prénom) et `lastname` (nom de famille). La migration a été effectuée **sans perte de données** : les valeurs existantes du champ `name` ont été transférées vers `firstname`.
 
 ---
@@ -11,6 +9,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ## Modifications effectuées
 
 ### 1. Migration Prisma ✅
+
 - **Fichier**: `prisma/migrations/20260311124549_separate_firstname_lastname/migration.sql`
 - **Statut**: Migration corrigée pour transférer les données sans perte
 - **Changements**:
@@ -21,6 +20,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 - **Application**: Migration appliquée avec succès via `prisma migrate reset`
 
 ### 2. Configuration Better Auth ✅
+
 - **Fichier**: `src/lib/auth.ts`
 - **Changements**:
   - Ajout de `firstname` (required: true) dans `additionalFields`
@@ -29,6 +29,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ### 3. DTOs ✅
 
 #### 3.1 RegisterDto
+
 - **Fichier**: `src/auth/dto/register.dto.ts`
 - **Changements**:
   - Suppression du champ `name`
@@ -37,6 +38,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
   - Ajout de `lastname` (IsString, IsNotEmpty)
 
 #### 3.2 CreateTeacherDto (NOUVEAU)
+
 - **Fichier**: `src/users/dto/create-teacher.dto.ts`
 - **Statut**: Créé
 - **Contenu**:
@@ -47,12 +49,14 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ### 4. Types et Interfaces ✅
 
 #### 4.1 auth.types.ts
+
 - **Fichier**: `src/auth/types/auth.types.ts`
 - **Changements**:
   - Création de l'interface `UserName { firstname: string; lastname: string | null }`
   - `UserResponse.name` devient `UserResponse.name: UserName`
 
 #### 4.2 user.types.ts
+
 - **Fichier**: `src/users/types/user.types.ts`
 - **Changements**:
   - Import de `UserName` depuis `auth.types.ts`
@@ -60,6 +64,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
   - `UserSearchResponse.name` devient `UserSearchResponse.name: UserName`
 
 #### 4.3 sae.types.ts
+
 - **Fichier**: `src/saes/types/sae.types.ts`
 - **Changements**:
   - Import de `UserName` depuis `auth.types.ts`
@@ -69,6 +74,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ### 5. Services ✅
 
 #### 5.1 AuthService
+
 - **Fichier**: `src/auth/auth.service.ts`
 - **Méthode modifiée**: `findUserById`
 - **Changements**:
@@ -76,6 +82,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
   - Construction de l'objet `name: { firstname, lastname }` dans la réponse
 
 #### 5.2 UsersService
+
 - **Fichier**: `src/users/users.service.ts`
 - **Méthode modifiée**: `findAll`
 - **Changements**:
@@ -85,8 +92,9 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
   - Mapping des résultats avec construction de l'objet `name`
 
 #### 5.3 SaesService
+
 - **Fichier**: `src/saes/saes.service.ts`
-- **Méthodes modifiées**: 
+- **Méthodes modifiées**:
   - `findAll`
   - `findArchives`
   - `findOne`
@@ -102,6 +110,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
   - `createInvitation` et `findInvitations`: mapping de `name` avec concaténation
 
 #### 5.4 DocumentsService
+
 - **Fichier**: `src/documents/documents.service.ts`
 - **Méthodes modifiées**:
   - `submitDocument`
@@ -114,12 +123,14 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ### 6. Seed ✅
 
 #### 6.1 seed.ts
+
 - **Fichier**: `prisma/seed.ts`
 - **Changements**:
   - Utilisateur `teacher`: `name` → `firstname: 'Marc'`, `lastname: 'Professeur'`
   - Utilisateur `student`: `name` → `firstname: 'Alice'`, `lastname: 'Student'`
 
 #### 6.2 seed-archives-complete.ts
+
 - **Fichier**: `prisma/seed-archives-complete.ts`
 - **Changements**:
   - `archiveTeacher`: `name` → `firstname: 'Responsable'`, `lastname: 'Archives'`
@@ -131,15 +142,18 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ## Tests de validation
 
 ### Migration
+
 - ✅ Migration appliquée sans erreur
 - ✅ Données existantes préservées (name → firstname)
 - ✅ Client Prisma régénéré
 - ✅ Seed exécuté avec succès
 
 ### Build
+
 - ✅ `npm run build` réussit sans erreurs
 
 ### Points de validation restants (à tester manuellement)
+
 - [ ] Inscription avec `firstname` et `lastname` manquants retourne `400`
 - [ ] Inscription publique : `role` dans le body est ignoré, compte créé en `STUDENT`
 - [ ] `GET /api/auth/me` retourne `name: { firstname, lastname }`
@@ -154,6 +168,7 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ## Conformité aux règles GEMINI.md
 
 ### TypeScript
+
 - ✅ Aucun `any` dans le code
 - ✅ Tous les paramètres de fonction sont typés
 - ✅ Tous les retours de fonction sont typés explicitement
@@ -161,23 +176,27 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 - ✅ Gestion explicite des `null` et `undefined`
 
 ### Style et formatage
+
 - ✅ Aucun commentaire dans le code
 - ✅ Noms explicites et auto-documentés
 - ✅ Pas de magic strings
 - ✅ Booléens nommés avec préfixes (`is`, `has`, etc.)
 
 ### Architecture NestJS
+
 - ✅ DTOs avec `class-validator`
 - ✅ Séparation des responsabilités (Controller/Service)
 - ✅ Types de réponse explicites
 - ✅ Injection de dépendances
 
 ### Prisma
+
 - ✅ Sélection explicite des champs nécessaires
 - ✅ Filtrage `deletedAt: null` appliqué
 - ✅ Pas d'exposition de données sensibles
 
 ### Sécurité
+
 - ✅ Pas de données sensibles dans les réponses API
 - ✅ Types de retour explicites (interfaces `*Response`)
 
@@ -186,14 +205,19 @@ Le champ générique `name` a été remplacé par deux champs distincts : `first
 ## Notes techniques
 
 ### Format du nom dans les réponses API
+
 Le format a évolué de:
+
 ```typescript
-{ name: "Jean Dupont" }
+{
+  name: 'Jean Dupont';
+}
 ```
 
 Vers:
+
 ```typescript
-{ 
+{
   name: {
     firstname: "Jean",
     lastname: "Dupont"
@@ -202,13 +226,17 @@ Vers:
 ```
 
 ### Concaténation pour affichage
+
 Dans certains contextes (invitations, submissions), le nom complet est concaténé:
+
 ```typescript
-`${firstname} ${lastname || ''}`.trim()
+`${firstname} ${lastname || ''}`.trim();
 ```
 
 ### Migration sans perte
+
 La migration SQL suit le pattern safe:
+
 1. Ajout des nouvelles colonnes (nullable)
 2. Transfert des données
 3. Contrainte NOT NULL
@@ -237,6 +265,7 @@ La migration SQL suit le pattern safe:
 ## Impact Frontend
 
 Le frontend devra être mis à jour pour :
+
 1. Envoyer `firstname` et `lastname` au lieu de `name` lors de l'inscription
 2. Afficher `user.name.firstname` et `user.name.lastname` au lieu de `user.name`
 3. Adapter les formulaires de recherche pour chercher sur les deux champs

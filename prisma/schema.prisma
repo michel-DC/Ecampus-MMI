@@ -17,11 +17,13 @@ model user {
   id            String    @id @default(uuid())
   email         String    @unique
   emailVerified Boolean   @default(false)
+  name          String
   firstname     String
-  lastname      String?
+  lastname      String
   image         String?
   role          UserRole  @default(STUDENT)
   isActive      Boolean   @default(true)
+  banned        Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

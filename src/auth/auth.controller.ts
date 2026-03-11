@@ -12,22 +12,29 @@ import type { Request, Response } from 'express';
 import { auth } from '../lib/auth';
 import { AuthService } from './auth.service';
 import { OnboardingDto } from './dto/onboarding.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { CreateTeacherDto } from '../users/dto/create-teacher.dto';
+import { CreatedTeacherResponse } from '../users/types/user.types';
+import { UsersService } from '../users/users.service';
 import { AuthGuard } from './guards/auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { JwtPayload, UserResponse } from './types/auth.types';
+import type { JwtPayload } from './types/auth.types';
 import { toNodeHandler } from 'better-auth/node';
 
 @Controller('api/auth')
 export class AuthController {
   private readonly logger = new Logger(AuthController.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get('test')
-  test() {
+  test(): { success: boolean; message: string } {
     this.logger.log('Test route reached');
     return {
       success: true,
@@ -37,7 +44,9 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async getMe(@CurrentUser() user: JwtPayload): Promise<any> {
+  async getMe(
+    @CurrentUser() user: JwtPayload,
+  ): Promise<{ success: boolean; data: any }> {
     this.logger.log(`Fetching profile for user: ${user.sub}`);
     const userData = await this.authService.findUserById(user.sub);
     return { success: true, data: userData };
@@ -54,12 +63,39 @@ export class AuthController {
     return { success: true, message: 'Onboarding terminé avec succès' };
   }
 
+  @Post('change-password')
+  @UseGuards(AuthGuard)
+  async changePassword(
+    @Body() dto: ChangePasswordDto,
+    @Req() req: Request,
+  ): Promise<{ success: boolean; message: string }> {
+    await auth.api.changePassword({
+      body: {
+        currentPassword: dto.oldPassword,
+        newPassword: dto.newPassword,
+        revokeOtherSessions: true,
+      },
+      headers: req.headers as any,
+    });
+
+    return { success: true, message: 'Mot de passe modifié avec succès' };
+  }
+
+  @Post('sign-up/teacher')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async signUpTeacher(
+    @Body() dto: CreateTeacherDto,
+  ): Promise<{ success: boolean; data: CreatedTeacherResponse }> {
+    const result = await this.usersService.createTeacher(dto);
+    return { success: true, data: result };
+  }
+
   @Post('*path')
   @Get('*path')
   async handleAuth(@Req() req: Request, @Res() res: Response): Promise<void> {
     this.logger.log(`Better Auth handler reached: ${req.method} ${req.url}`);
 
-    // Pour intercepter et modifier la réponse JSON si c'est un succès
     const originalJson = res.json.bind(res);
     res.json = (body: any) => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
