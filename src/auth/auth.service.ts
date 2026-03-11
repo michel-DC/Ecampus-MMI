@@ -18,7 +18,8 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        name: true,
+        firstname: true,
+        lastname: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -29,7 +30,14 @@ export class AuthService {
       throw new NotFoundException('Utilisateur non trouvé');
     }
 
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      name: { firstname: user.firstname, lastname: user.lastname },
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+    };
   }
 
   async completeOnboarding(userId: string, dto: OnboardingDto): Promise<void> {

@@ -58,7 +58,9 @@ export class SaesService {
         },
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
         semester: { select: { id: true, promotionId: true } },
@@ -149,8 +151,12 @@ export class SaesService {
         studentCount: isTeacherOrAdmin ? saeStats?.studentCount : undefined,
         status,
         createdBy: {
-          name: sae.createdBy.name,
+          id: sae.createdBy.id,
           email: sae.createdBy.email,
+          name: {
+            firstname: sae.createdBy.firstname,
+            lastname: sae.createdBy.lastname,
+          },
         },
         createdAt: sae.createdAt,
         updatedAt: sae.updatedAt,
@@ -195,7 +201,9 @@ export class SaesService {
         submissions: {
           where: { imageUrl: { not: null } },
           take: 1,
-          include: { student: { select: { name: true } } },
+          include: {
+            student: { select: { firstname: true, lastname: true } },
+          },
         },
       },
       orderBy: { semester: { promotion: { academicYear: 'desc' } } },
@@ -209,7 +217,9 @@ export class SaesService {
       description: sae.description,
       imageUrl: sae.submissions[0]?.imageUrl,
       url: sae.submissions[0]?.url,
-      studentName: sae.submissions[0]?.student.name,
+      studentName: sae.submissions[0]
+        ? `${sae.submissions[0].student.firstname} ${sae.submissions[0].student.lastname || ''}`.trim()
+        : undefined,
     }));
   }
 
@@ -235,7 +245,9 @@ export class SaesService {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
         semester: { select: { promotionId: true } },
@@ -285,8 +297,12 @@ export class SaesService {
       studentCount,
       status,
       createdBy: {
-        name: sae.createdBy.name,
+        id: sae.createdBy.id,
         email: sae.createdBy.email,
+        name: {
+          firstname: sae.createdBy.firstname,
+          lastname: sae.createdBy.lastname,
+        },
       },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
@@ -325,7 +341,9 @@ export class SaesService {
         createdById,
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -351,8 +369,12 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: sae.createdBy.name,
+        id: sae.createdBy.id,
         email: sae.createdBy.email,
+        name: {
+          firstname: sae.createdBy.firstname,
+          lastname: sae.createdBy.lastname,
+        },
       },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
@@ -405,7 +427,9 @@ export class SaesService {
         isPublished: dto.isPublished,
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -432,8 +456,12 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: updated.createdBy.name,
+        id: updated.createdBy.id,
         email: updated.createdBy.email,
+        name: {
+          firstname: updated.createdBy.firstname,
+          lastname: updated.createdBy.lastname,
+        },
       },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
@@ -459,7 +487,9 @@ export class SaesService {
       where: { id },
       data: { isPublished: true },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -486,8 +516,12 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: updated.createdBy.name,
+        id: updated.createdBy.id,
         email: updated.createdBy.email,
+        name: {
+          firstname: updated.createdBy.firstname,
+          lastname: updated.createdBy.lastname,
+        },
       },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
@@ -522,7 +556,13 @@ export class SaesService {
 
     const targetUser = await this.prisma.user.findUnique({
       where: { id: dto.userId },
-      select: { id: true, name: true, role: true, isActive: true },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        role: true,
+        isActive: true,
+      },
     });
 
     if (!targetUser || !targetUser.isActive) {
@@ -557,7 +597,7 @@ export class SaesService {
       id: invitation.id,
       saeId: invitation.saeId,
       userId: invitation.userId,
-      name: targetUser.name,
+      name: `${targetUser.firstname} ${targetUser.lastname || ''}`.trim(),
       createdAt: invitation.createdAt,
     };
   }
@@ -575,7 +615,7 @@ export class SaesService {
 
     const invitations = await this.prisma.saeInvitation.findMany({
       where: { saeId },
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { firstname: true, lastname: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -583,7 +623,7 @@ export class SaesService {
       id: inv.id,
       saeId: inv.saeId,
       userId: inv.userId,
-      name: inv.user.name,
+      name: `${inv.user.firstname} ${inv.user.lastname || ''}`.trim(),
       createdAt: inv.createdAt,
     }));
   }

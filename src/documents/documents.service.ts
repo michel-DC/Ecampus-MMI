@@ -188,13 +188,16 @@ export class DocumentsService {
         imageUrl: dto.imageUrl,
         submittedAt: new Date(),
       },
-      include: { student: { select: { name: true } } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
     });
 
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName: submission.student.name,
+      studentName:
+        `${submission.student.firstname} ${submission.student.lastname || ''}`.trim(),
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
@@ -211,7 +214,9 @@ export class DocumentsService {
   ): Promise<StudentSubmissionResponse> {
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { saeId_studentId: { saeId, studentId } },
-      include: { student: { select: { name: true } } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
     });
 
     if (!submission)
@@ -220,7 +225,8 @@ export class DocumentsService {
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName: submission.student.name,
+      studentName:
+        `${submission.student.firstname} ${submission.student.lastname || ''}`.trim(),
       url: submission.url,
       name: submission.name,
       mimeType: submission.mimeType,
@@ -252,14 +258,16 @@ export class DocumentsService {
 
     const submissions = await this.prisma.studentSubmission.findMany({
       where: { saeId },
-      include: { student: { select: { name: true } } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
       orderBy: { submittedAt: 'desc' },
     });
 
     return submissions.map((s) => ({
       id: s.id,
       saeId: s.saeId,
-      studentName: s.student.name,
+      studentName: `${s.student.firstname} ${s.student.lastname || ''}`.trim(),
       url: s.url,
       name: s.name,
       mimeType: s.mimeType,

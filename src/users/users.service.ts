@@ -10,27 +10,38 @@ export class UsersService {
   async findAll(filters: UserFiltersDto): Promise<UserSearchResponse[]> {
     const { q, role, limit = 20 } = filters;
 
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       where: {
         isActive: true,
         role: role,
         OR: q
           ? [
-              { name: { contains: q, mode: 'insensitive' } },
+              { firstname: { contains: q, mode: 'insensitive' } },
+              { lastname: { contains: q, mode: 'insensitive' } },
               { email: { contains: q, mode: 'insensitive' } },
             ]
           : undefined,
       },
       select: {
         id: true,
-        name: true,
         email: true,
+        firstname: true,
+        lastname: true,
         role: true,
         isActive: true,
         createdAt: true,
       },
       take: limit,
-      orderBy: { name: 'asc' },
+      orderBy: { lastname: 'asc' },
     });
+
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: { firstname: user.firstname, lastname: user.lastname },
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+    }));
   }
 }

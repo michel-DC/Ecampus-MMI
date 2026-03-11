@@ -14,6 +14,14 @@ export const auth = betterAuth({
         type: 'string',
         required: true,
       },
+      firstname: {
+        type: 'string',
+        required: true,
+      },
+      lastname: {
+        type: 'string',
+        required: false,
+      },
     },
   },
   databaseHooks: {

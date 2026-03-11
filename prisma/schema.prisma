@@ -17,7 +17,8 @@ model user {
   id            String    @id @default(uuid())
   email         String    @unique
   emailVerified Boolean   @default(false)
-  name          String
+  firstname     String
+  lastname      String?
   image         String?
   role          UserRole  @default(STUDENT)
   isActive      Boolean   @default(true)

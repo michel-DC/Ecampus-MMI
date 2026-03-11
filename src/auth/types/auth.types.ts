@@ -1,5 +1,10 @@
 import { UserRole } from '@prisma/client';
 
+export interface UserName {
+  firstname: string;
+  lastname: string | null;
+}
+
 export interface JwtPayload {
   sub: string;
   role: UserRole;
@@ -13,7 +18,7 @@ export interface AuthenticatedRequest extends Request {
 export interface UserResponse {
   id: string;
   email: string;
-  name: string;
+  name: UserName;
   role: UserRole;
   isActive: boolean;
   createdAt: Date;
