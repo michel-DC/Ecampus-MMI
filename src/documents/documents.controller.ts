@@ -85,6 +85,10 @@ export class DocumentsController {
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
   ): Promise<StudentSubmissionResponse[]> {
-    return this.documentsService.findAllSubmissions(saeId, user?.role);
+    return this.documentsService.findAllSubmissions(
+      saeId,
+      user?.sub,
+      user?.role,
+    );
   }
 }

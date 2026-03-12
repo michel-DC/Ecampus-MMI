@@ -249,6 +249,7 @@ model StudentSubmission {
   mimeType    String
   description String   @db.Text
   imageUrl    String?
+  isPublic    Boolean  @default(false)
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

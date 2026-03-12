@@ -105,6 +105,44 @@ export class ResourcesService {
     }
   }
 
+  async uploadProfileImage(
+    file: Express.Multer.File,
+  ): Promise<{ url: string }> {
+    if (!file) throw new BadRequestException('Aucun fichier fourni');
+
+    const allowedMimeTypes = [
+      'image/png',
+      'image/jpeg',
+      'image/jpg',
+      'image/webp',
+    ];
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      throw new BadRequestException(
+        'Format de fichier non supporté. Utilisez PNG, JPG, JPEG ou WEBP.',
+      );
+    }
+
+    try {
+      const uploadResult = await this.utapi.uploadFiles(
+        new File([new Uint8Array(file.buffer)], file.originalname, {
+          type: file.mimetype,
+        }),
+      );
+
+      if (!uploadResult.data) {
+        throw new InternalServerErrorException(
+          "L'upload de l'image de profil a échoué",
+        );
+      }
+
+      return { url: uploadResult.data.url };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        "Erreur lors de l'upload de l'image : " + error.message,
+      );
+    }
+  }
+
   async findAllPromotions(): Promise<PromotionResponse[]> {
     return this.prisma.promotion.findMany({
       where: { isActive: true },

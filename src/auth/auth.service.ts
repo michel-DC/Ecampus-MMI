@@ -65,13 +65,28 @@ export class AuthService {
       throw new NotFoundException('Groupe non trouvé');
     }
 
-    await this.prisma.studentProfile.create({
-      data: {
-        userId,
-        promotionId: dto.promotionId,
-        groupId: dto.groupId,
-      },
-    });
+    const operations: any[] = [
+      this.prisma.studentProfile.create({
+        data: {
+          userId,
+          promotionId: dto.promotionId,
+          groupId: dto.groupId,
+        },
+      }),
+    ];
+
+    if (dto.imageUrl) {
+      operations.push(
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            image: dto.imageUrl,
+          },
+        }),
+      );
+    }
+
+    await this.prisma.$transaction(operations);
   }
 
   async createTeacherProfileIfMissing(userId: string): Promise<void> {

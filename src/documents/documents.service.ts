@@ -179,6 +179,7 @@ export class DocumentsService {
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
+        isPublic: dto.isPublic ?? false,
       },
       update: {
         url: dto.url,
@@ -186,6 +187,7 @@ export class DocumentsService {
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
+        isPublic: dto.isPublic,
         submittedAt: new Date(),
       },
       include: {
@@ -203,6 +205,7 @@ export class DocumentsService {
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
+      isPublic: submission.isPublic,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -232,6 +235,7 @@ export class DocumentsService {
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
+      isPublic: submission.isPublic,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -239,25 +243,42 @@ export class DocumentsService {
 
   async findAllSubmissions(
     saeId: string,
+    requestingUserId?: string,
     requestingUserRole?: UserRole,
   ): Promise<StudentSubmissionResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: { isPublished: true },
+      select: {
+        isPublished: true,
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
 
-    const isTeacherOrAdmin =
-      requestingUserRole === UserRole.TEACHER ||
-      requestingUserRole === UserRole.ADMIN;
+    const isAdmin = requestingUserRole === UserRole.ADMIN;
+    const isOwner = sae.createdById === requestingUserId;
+    const isInvited = sae.invitations.some(
+      (inv) => inv.userId === requestingUserId,
+    );
 
-    if (!sae.isPublished && !isTeacherOrAdmin) {
+    const canSeePrivateSubmissions = isAdmin || isOwner || isInvited;
+
+    if (!sae.isPublished && !canSeePrivateSubmissions) {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     const submissions = await this.prisma.studentSubmission.findMany({
-      where: { saeId },
+      where: {
+        saeId,
+        OR: canSeePrivateSubmissions
+          ? undefined
+          : [
+              { isPublic: true },
+              { studentId: requestingUserId || 'NONE' },
+            ],
+      },
       include: {
         student: { select: { firstname: true, lastname: true } },
       },
@@ -273,6 +294,7 @@ export class DocumentsService {
       mimeType: s.mimeType,
       description: s.description,
       imageUrl: s.imageUrl,
+      isPublic: s.isPublic,
       submittedAt: s.submittedAt,
       updatedAt: s.updatedAt,
     }));

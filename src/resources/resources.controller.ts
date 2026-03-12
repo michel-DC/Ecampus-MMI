@@ -46,6 +46,16 @@ export class ResourcesController {
     );
   }
 
+  @Post('upload-image')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ success: boolean; data: { url: string } }> {
+    const result = await this.resourcesService.uploadProfileImage(file);
+    return { success: true, data: result };
+  }
+
   @Get('banners')
   async getBanners(): Promise<{ success: boolean; data: BannerResponse[] }> {
     const banners = await this.resourcesService.findBanners();

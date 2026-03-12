@@ -197,7 +197,7 @@ export class SaesService {
           include: { promotion: { select: { academicYear: true } } },
         },
         submissions: {
-          where: { imageUrl: { not: null } },
+          where: { imageUrl: { not: null }, isPublic: true },
           take: 1,
           include: {
             student: { select: { firstname: true, lastname: true } },

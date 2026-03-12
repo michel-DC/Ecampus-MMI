@@ -19,6 +19,7 @@ export interface StudentSubmissionResponse {
   mimeType: string;
   description: string;
   imageUrl?: string | null;
+  isPublic: boolean;
   submittedAt: Date;
   updatedAt: Date;
 }

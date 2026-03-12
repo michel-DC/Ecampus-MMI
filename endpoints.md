@@ -66,14 +66,15 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```json
 {
   "promotionId": "UUID_DE_LA_PROMOTION",
-  "groupId": "UUID_DU_GROUPE"
+  "groupId": "UUID_DU_DU_GROUPE",
+  "imageUrl": "URL_DE_L_IMAGE_DE_PROFIL"
 }
 ```
 
 ### 6. Recherche d'Utilisateurs
 
 - **Méthode** : GET
-- **URL** : /api/users
+- **URL** : /api/resources/users
 - **Rôle** : TEACHER, ADMIN
 - **Sécurité** : AuthGuard, RolesGuard
 - **Filtres (Query)** :
@@ -119,42 +120,42 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Ressources Pédagogiques
 
-### 6. Liste des Promotions
+### 9. Liste des Promotions
 
 - **Méthode** : GET
-- **URL** : /api/promotions
+- **URL** : /api/resources/promotions
 - **Rôle** : PUBLIC
 - **Description** : Liste toutes les promotions (MMI1, MMI2, etc.) ainsi que les archives historiques.
 
-### 7. Liste des Groupes
+### 10. Liste des Groupes
 
 - **Méthode** : GET
-- **URL** : /api/groups
+- **URL** : /api/resources/groups
 - **Rôle** : PUBLIC
 - **Description** : Liste tous les groupes de TD/TP (GROUPEA1, etc.).
 
-### 8. Liste des Semestres
+### 11. Liste des Semestres
 
 - **Méthode** : GET
-- **URL** : /api/semesters
+- **URL** : /api/resources/semesters
 - **Rôle** : PUBLIC
 - **Description** : Liste les semestres avec leur promotion associée.
 
-### 9. Liste des Thématiques
+### 12. Liste des Thématiques
 
 - **Méthode** : GET
-- **URL** : /api/saes/thematics
+- **URL** : /api/resources/thematics
 - **Rôle** : PUBLIC
 - **Description** : Liste les thématiques disponibles (Développement Web, UX/UI, etc.).
 
-### 10. Liste des Bannières
+### 13. Liste des Bannières
 
 - **Méthode** : GET
-- **URL** : /api/saes/banners
+- **URL** : /api/resources/banners
 - **Rôle** : PUBLIC
 - **Description** : Récupère la liste des URLs de bannières prédéfinies pour les SAE.
 
-### 11. Upload de Fichier
+### 14. Upload de Fichier (SAE)
 
 - **Méthode** : POST
 - **URL** : /api/resources/upload
@@ -165,13 +166,23 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - saeId : UUID de la SAE concernée.
   - type : (Profs uniquement) SUJET, RESOURCE ou AUTRE.
   - description : (Étudiants uniquement) Description du travail rendu.
-- **Description** : Gère l'upload vers le stockage distant et l'enregistrement en base de données.
+- **Description** : Gère l'upload vers le stockage distant et l'enregistrement en base de données pour une SAE spécifique.
+
+### 15. Upload d'Image de Profil
+
+- **Méthode** : POST
+- **URL** : /api/resources/upload-image
+- **Rôle** : CONNECTÉ (Tous rôles)
+- **Sécurité** : AuthGuard
+- **Body (formData)** :
+  - file : Le fichier image (PNG, JPG, JPEG, WEBP).
+- **Description** : Upload une image de profil et retourne l'URL à utiliser ensuite dans l'onboarding ou la mise à jour de profil.
 
 ---
 
 ## Module SAE (Situations d'Apprentissage et d'Évaluation)
 
-### 12. Liste des SAE Actuelles
+### 16. Liste des SAE Actuelles
 
 - **Méthode** : GET
 - **URL** : /api/saes
@@ -182,25 +193,29 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - groupId : (Enseignants) Filtrer les statistiques par groupe.
   - status : draft, upcoming, ongoing, finished.
   - isUrgent : true pour voir les échéances proches (< 3 jours).
-- **Note** : Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
+- **Note** :
+  - Les étudiants ne voient que les SAE publiées de **leur propre promotion**.
+  - Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
 
-### 13. Galerie des Archives (Hall of Fame)
+### 16. Galerie des Archives (Hall of Fame)
 
 - **Méthode** : GET
 - **URL** : /api/saes/archives
 - **Rôle** : PUBLIC
 - **Description** : Accès direct aux travaux passés avec images pour affichage graphique.
 - **Filtres (Query)** : year (ex: 2023).
-- **Réponse** : Liste d'objets incluant title, year, thematic, imageUrl (image), url (fichier rendu) et studentName.
+- **Note** : Seuls les rendus marqués comme **publics** par les étudiants sont affichés ici.
 
-### 14. Détail d'une SAE
+### 17. Détail d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:id
 - **Rôle** : PUBLIC (Si publiée), TEACHER/ADMIN (Toujours)
-- **Note** : Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
+- **Note** :
+  - Les étudiants ne peuvent accéder qu'aux SAE de leur propre promotion.
+  - Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
 
-### 15. Créer une SAE
+### 18. Créer une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes
@@ -213,7 +228,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   "description": "Description",
   "instructions": "Optionnel",
   "semesterId": "UUID",
-  "teacherId": "UUID",
+  "teacherId": "String",
   "thematicId": "UUID",
   "bannerId": "UUID",
   "startDate": "2026-03-01T08:00:00Z",
@@ -223,27 +238,27 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
 
-### 16. Modifier une SAE
+### 19. Modifier une SAE
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:id
 - **Rôle** : TEACHER (Propriétaire uniquement), ADMIN
 - **Note** : Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
 
-### 17. Publier une SAE
+### 20. Publier une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes/:id/publish
 - **Rôle** : TEACHER (Propriétaire), ADMIN
 - **Note** : Un professeur peut publier uniquement les SAE dont il est propriétaire. Un ADMIN peut publier toutes les SAE.
 
-### 18. Supprimer une SAE
+### 21. Supprimer une SAE
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:id
 - **Rôle** : **ADMIN uniquement**
 
-### 19. Gestion des Invitations
+### 22. Gestion des Invitations
 
 - POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire, ADMIN).
 - GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire, ADMIN).
@@ -254,19 +269,19 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Annonces
 
-### 20. Liste des Annonces
+### 23. Liste des Annonces
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements
 - **Rôle** : PUBLIC (Si SAE publiée)
 
-### 21. Détail d'une Annonce
+### 24. Détail d'une Annonce
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements/:id
 - **Rôle** : PUBLIC (Si SAE publiée)
 
-### 22. Gérer les Annonces
+### 25. Gérer les Annonces
 
 - POST /api/saes/:saeId/announcements : Créer (Rôle: TEACHER Propriétaire/Invité).
 - PATCH /api/saes/:saeId/announcements/:id : Modifier (Rôle: TEACHER Propriétaire/Invité).
@@ -276,20 +291,45 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Documents et Rendus
 
-### 23. Documents SAE (Enseignants)
+### 26. Documents SAE (Enseignants)
 
 - GET /api/saes/:saeId/documents : Consulter (Rôle: PUBLIC si SAE publiée).
 - POST /api/saes/:saeId/documents : Ajouter (Rôle: TEACHER Propriétaire/Invité).
 - DELETE /api/saes/:saeId/documents/:documentId : Supprimer (Rôle: TEACHER Propriétaire/Invité).
 
-### 24. Rendus (Étudiants)
+### 27. Rendus (Étudiants)
 
-- POST /api/saes/:saeId/submission : Déposer/Mettre à jour son travail (Rôle: STUDENT de la promotion concernée).
-- GET /api/saes/:saeId/submission/me : Consulter son propre rendu (Rôle: STUDENT concerné).
+- **Méthode** : POST
+- **URL** : /api/saes/:saeId/submission
+- **Rôle** : STUDENT de la promotion concernée
+- **Body** :
 
-### 25. Liste des Rendus
+```json
+{
+  "url": "URL_DU_FICHIER",
+  "name": "Nom du fichier",
+  "mimeType": "application/pdf",
+  "description": "Description du travail",
+  "imageUrl": "URL_OPTIONNELLE_DE_L_IMAGE",
+  "isPublic": true
+}
+```
+
+- **Note** : Le champ `isPublic` (défaut: `false`) détermine si le rendu sera visible par les autres étudiants et le public.
+
+### 28. Consulter son propre rendu
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/submission/me
+- **Rôle** : STUDENT concerné
+
+### 29. Liste des Rendus (Galerie)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submissions
 - **Rôle** : PUBLIC (Si SAE publiée)
-- **Description** : Liste des travaux avec studentName, imageUrl et description pour la galerie.
+- **Description** : Liste des travaux avec studentName, imageUrl, description et isPublic.
+- **Note** :
+  - Les ADMINs, propriétaires et invités de la SAE voient **tous** les rendus.
+  - Les autres utilisateurs ne voient que les rendus marqués comme **publics**.
+  - Un étudiant voit toujours son propre rendu.
