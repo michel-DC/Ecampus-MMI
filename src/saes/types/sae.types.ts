@@ -37,7 +37,7 @@ export interface SaeArchiveResponse {
   description: string;
   imageUrl?: string | null;
   url?: string | null;
-  studentName?: string;
+  name?: UserName;
 }
 
 export interface SaeListResponse {
@@ -49,7 +49,7 @@ export interface SaeInvitationResponse {
   id: string;
   saeId: string;
   userId: string;
-  name: string;
+  name: UserName;
   createdAt: Date;
 }
 

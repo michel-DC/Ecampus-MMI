@@ -307,7 +307,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```json
 {
   "url": "URL_DU_FICHIER",
-  "name": "Nom du fichier",
+  "fileName": "Nom du fichier",
   "mimeType": "application/pdf",
   "description": "Description du travail",
   "imageUrl": "URL_OPTIONNELLE_DE_L_IMAGE",
@@ -328,7 +328,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submissions
 - **Rôle** : PUBLIC (Si SAE publiée)
-- **Description** : Liste des travaux avec studentName, imageUrl, description et isPublic.
+- **Description** : Liste des travaux avec l'objet name (firstname, lastname), imageUrl, description et isPublic.
 - **Note** :
   - Les ADMINs, propriétaires et invités de la SAE voient **tous** les rendus.
   - Les autres utilisateurs ne voient que les rendus marqués comme **publics**.

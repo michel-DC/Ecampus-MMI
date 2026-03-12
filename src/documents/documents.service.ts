@@ -175,7 +175,7 @@ export class DocumentsService {
         saeId,
         studentId,
         url: dto.url,
-        name: dto.name,
+        name: dto.fileName,
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
@@ -183,7 +183,7 @@ export class DocumentsService {
       },
       update: {
         url: dto.url,
-        name: dto.name,
+        name: dto.fileName,
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
@@ -198,10 +198,12 @@ export class DocumentsService {
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName:
-        `${submission.student.firstname} ${submission.student.lastname || ''}`.trim(),
+      name: {
+        firstname: submission.student.firstname,
+        lastname: submission.student.lastname,
+      },
       url: submission.url,
-      name: submission.name,
+      fileName: submission.name,
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
@@ -228,10 +230,12 @@ export class DocumentsService {
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName:
-        `${submission.student.firstname} ${submission.student.lastname || ''}`.trim(),
+      name: {
+        firstname: submission.student.firstname,
+        lastname: submission.student.lastname,
+      },
       url: submission.url,
-      name: submission.name,
+      fileName: submission.name,
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
@@ -288,9 +292,12 @@ export class DocumentsService {
     return submissions.map((s) => ({
       id: s.id,
       saeId: s.saeId,
-      studentName: `${s.student.firstname} ${s.student.lastname || ''}`.trim(),
+      name: {
+        firstname: s.student.firstname,
+        lastname: s.student.lastname,
+      },
       url: s.url,
-      name: s.name,
+      fileName: s.name,
       mimeType: s.mimeType,
       description: s.description,
       imageUrl: s.imageUrl,

@@ -40,13 +40,13 @@ export class SaesController {
   async findAll(
     @Query() filters: SaeFiltersDto,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<SaeListResponse & { success: boolean }> {
+  ): Promise<{ success: boolean; data: SaeResponse[]; total: number }> {
     const result = await this.saesService.findAll(
       filters,
       user?.sub,
       user?.role,
     );
-    return { success: true, ...result };
+    return { success: true, data: result.data, total: result.total };
   }
 
   @Get('archives')

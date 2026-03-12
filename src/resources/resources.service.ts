@@ -80,7 +80,7 @@ export class ResourcesService {
           dto.saeId,
           {
             url: fileData.url,
-            name: fileData.name,
+            fileName: fileData.name,
             mimeType: file.mimetype,
             description: dto.description,
             imageUrl: dto.imageUrl,

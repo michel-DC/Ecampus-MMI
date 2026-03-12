@@ -5,7 +5,7 @@ export class CreateSubmissionDto {
   url: string;
 
   @IsString()
-  name: string;
+  fileName: string;
 
   @IsString()
   mimeType: string;

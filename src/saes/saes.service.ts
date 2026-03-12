@@ -215,8 +215,11 @@ export class SaesService {
       description: sae.description,
       imageUrl: sae.submissions[0]?.imageUrl,
       url: sae.submissions[0]?.url,
-      studentName: sae.submissions[0]
-        ? `${sae.submissions[0].student.firstname} ${sae.submissions[0].student.lastname || ''}`.trim()
+      name: sae.submissions[0]
+        ? {
+            firstname: sae.submissions[0].student.firstname,
+            lastname: sae.submissions[0].student.lastname,
+          }
         : undefined,
     }));
   }
@@ -619,7 +622,10 @@ export class SaesService {
       id: invitation.id,
       saeId: invitation.saeId,
       userId: invitation.userId,
-      name: `${targetUser.firstname} ${targetUser.lastname || ''}`.trim(),
+      name: {
+        firstname: targetUser.firstname,
+        lastname: targetUser.lastname,
+      },
       createdAt: invitation.createdAt,
     };
   }
@@ -645,7 +651,10 @@ export class SaesService {
       id: inv.id,
       saeId: inv.saeId,
       userId: inv.userId,
-      name: `${inv.user.firstname} ${inv.user.lastname || ''}`.trim(),
+      name: {
+        firstname: inv.user.firstname,
+        lastname: inv.user.lastname,
+      },
       createdAt: inv.createdAt,
     }));
   }

@@ -29,22 +29,28 @@ export class DocumentsController {
 
   @Get('documents')
   @UseGuards(OptionalAuthGuard)
-  findSaeDocuments(
+  async findSaeDocuments(
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<SaeDocumentResponse[]> {
-    return this.documentsService.findSaeDocuments(saeId, user?.role);
+  ): Promise<{ success: boolean; data: SaeDocumentResponse[] }> {
+    const data = await this.documentsService.findSaeDocuments(saeId, user?.role);
+    return { success: true, data };
   }
 
   @Post('documents')
   @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
-  addSaeDocument(
+  async addSaeDocument(
     @Param('saeId') saeId: string,
     @Body() dto: CreateSaeDocumentDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<SaeDocumentResponse> {
-    return this.documentsService.addSaeDocument(saeId, dto, user.sub);
+  ): Promise<{ success: boolean; data: SaeDocumentResponse }> {
+    const data = await this.documentsService.addSaeDocument(
+      saeId,
+      dto,
+      user.sub,
+    );
+    return { success: true, data };
   }
 
   @Delete('documents/:documentId')
@@ -53,42 +59,49 @@ export class DocumentsController {
   async removeSaeDocument(
     @Param('documentId') documentId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<{ success: boolean }> {
+  ): Promise<{ success: boolean; message: string }> {
     await this.documentsService.removeSaeDocument(documentId, user.sub);
-    return { success: true };
+    return { success: true, message: 'Document supprimé avec succès' };
   }
 
   @Post('submission')
   @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.STUDENT)
-  submitDocument(
+  async submitDocument(
     @Param('saeId') saeId: string,
     @Body() dto: CreateSubmissionDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<StudentSubmissionResponse> {
-    return this.documentsService.submitDocument(saeId, dto, user.sub);
+  ): Promise<{ success: boolean; data: StudentSubmissionResponse }> {
+    const data = await this.documentsService.submitDocument(
+      saeId,
+      dto,
+      user.sub,
+    );
+    return { success: true, data };
   }
 
   @Get('submission/me')
   @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
   @Roles(UserRole.STUDENT)
-  findMySubmission(
+  async findMySubmission(
     @Param('saeId') saeId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<StudentSubmissionResponse> {
-    return this.documentsService.findMySubmission(saeId, user.sub);
+  ): Promise<{ success: boolean; data: StudentSubmissionResponse }> {
+    const data = await this.documentsService.findMySubmission(saeId, user.sub);
+    return { success: true, data };
   }
 
   @Get('submissions')
   @UseGuards(OptionalAuthGuard)
-  findAllSubmissions(
+  async findAllSubmissions(
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<StudentSubmissionResponse[]> {
-    return this.documentsService.findAllSubmissions(
+  ): Promise<{ success: boolean; data: StudentSubmissionResponse[] }> {
+    const data = await this.documentsService.findAllSubmissions(
       saeId,
       user?.sub,
       user?.role,
     );
+    return { success: true, data };
   }
 }

@@ -37,13 +37,17 @@ export class ResourcesController {
     @UploadedFile() file: Express.Multer.File,
     @Body() dto: UploadResourceDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<StudentSubmissionResponse | SaeDocumentResponse> {
-    return await this.resourcesService.uploadAndRegister(
+  ): Promise<{
+    success: boolean;
+    data: StudentSubmissionResponse | SaeDocumentResponse;
+  }> {
+    const data = await this.resourcesService.uploadAndRegister(
       file,
       dto,
       user.sub,
       user.role,
     );
+    return { success: true, data };
   }
 
   @Post('upload-image')
