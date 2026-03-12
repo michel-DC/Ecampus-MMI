@@ -7,7 +7,7 @@ import { UsersService } from './users.service';
 import { UserFiltersDto } from './dto/user-filters.dto';
 import { UserSearchResponse } from './types/user.types';
 
-@Controller('api/users')
+@Controller('api/resources/users')
 @UseGuards(AuthGuard, RolesGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

@@ -22,7 +22,7 @@ export class MailService {
   async sendTeacherCredentials(
     payload: TeacherCredentialsPayload,
   ): Promise<void> {
-    const { error } = await this.resend.emails.send({
+    const { data, error } = await this.resend.emails.send({
       from: this.fromEmail,
       to: payload.email,
       subject: 'Bienvenue sur la plateforme SAE — Vos identifiants',
@@ -30,7 +30,9 @@ export class MailService {
     });
 
     if (error) {
-      throw new InternalServerErrorException('Failed to send welcome email');
+      throw new InternalServerErrorException(
+        "Échec de l'envoi de l'email de bienvenue",
+      );
     }
   }
 

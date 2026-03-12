@@ -21,13 +21,11 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException('Authentification requise');
     }
 
-    // Le champ role est maintenant disponible grâce à additionalFields dans Better Auth
     const userPayload: JwtPayload = {
       sub: session.user.id,
       email: session.user.email,
       role: (session.user as unknown as { role: UserRole }).role,
     };
-
     (request as Request & { user: JwtPayload }).user = userPayload;
 
     return true;

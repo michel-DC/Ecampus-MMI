@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Logger,
   Post,
   Req,
   Res,
@@ -21,13 +20,11 @@ import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { CurrentUser } from './decorators/current-user.decorator';
-import type { JwtPayload } from './types/auth.types';
+import type { JwtPayload, UserResponse } from './types/auth.types';
 import { toNodeHandler } from 'better-auth/node';
 
 @Controller('api/auth')
 export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
-
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
@@ -35,7 +32,6 @@ export class AuthController {
 
   @Get('test')
   test(): { success: boolean; message: string } {
-    this.logger.log('Test route reached');
     return {
       success: true,
       message: "L'authentification fonctionne correctement",
@@ -46,8 +42,7 @@ export class AuthController {
   @UseGuards(AuthGuard)
   async getMe(
     @CurrentUser() user: JwtPayload,
-  ): Promise<{ success: boolean; data: any }> {
-    this.logger.log(`Fetching profile for user: ${user.sub}`);
+  ): Promise<{ success: boolean; data: UserResponse }> {
     const userData = await this.authService.findUserById(user.sub);
     return { success: true, data: userData };
   }
@@ -75,7 +70,7 @@ export class AuthController {
         newPassword: dto.newPassword,
         revokeOtherSessions: true,
       },
-      headers: req.headers as any,
+      headers: req.headers as unknown as Record<string, string>,
     });
 
     return { success: true, message: 'Mot de passe modifié avec succès' };
@@ -94,10 +89,8 @@ export class AuthController {
   @Post('*path')
   @Get('*path')
   async handleAuth(@Req() req: Request, @Res() res: Response): Promise<void> {
-    this.logger.log(`Better Auth handler reached: ${req.method} ${req.url}`);
-
     const originalJson = res.json.bind(res);
-    res.json = (body: any) => {
+    res.json = (body: Record<string, unknown>): Response => {
       if (res.statusCode >= 200 && res.statusCode < 300) {
         if (typeof body === 'object' && body !== null && !('success' in body)) {
           body = { success: true, ...body };

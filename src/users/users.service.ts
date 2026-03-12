@@ -62,18 +62,16 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException('A user with this email already exists');
+      throw new ConflictException('Un utilisateur avec cet email existe déjà');
     }
 
     const temporaryPassword = this.generateTemporaryPassword();
 
-    // Delegates hashing & relational logic to better-auth
     const response = await auth.api.createUser({
       body: {
         email: dto.email,
         name: `${dto.firstname} ${dto.lastname}`,
         password: temporaryPassword,
-        // `admin` plugin only types `'admin' | 'user'` internally, so store our own role
         data: {
           role: 'TEACHER',
           firstname: dto.firstname,
@@ -84,16 +82,24 @@ export class UsersService {
 
     if (!response || !response.user) {
       throw new InternalServerErrorException(
-        'Failed to create teacher account',
+        "Échec de la création du compte de l'enseignant",
       );
     }
 
-    await this.mailService.sendTeacherCredentials({
-      email: dto.email,
-      firstname: dto.firstname,
-      lastname: dto.lastname,
-      temporaryPassword,
-    });
+    try {
+      await this.mailService.sendTeacherCredentials({
+        email: dto.email,
+        firstname: dto.firstname,
+        lastname: dto.lastname,
+        temporaryPassword,
+      });
+    } catch (error) {
+      await this.prisma.user.delete({
+        where: { id: response.user.id },
+      });
+      throw error;
+    }
+
 
     return {
       id: response.user.id,

@@ -35,8 +35,8 @@ export interface SaeArchiveResponse {
   year: number;
   thematic: string;
   description: string;
-  imageUrl?: string | null; // Image du rendu phare
-  url?: string | null; // Lien vers le rendu phare
+  imageUrl?: string | null;
+  url?: string | null;
   studentName?: string;
 }
 

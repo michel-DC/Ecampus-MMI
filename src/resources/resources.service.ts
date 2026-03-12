@@ -8,6 +8,16 @@ import { UTApi } from 'uploadthing/server';
 import { UserRole } from '@prisma/client';
 import { DocumentsService } from '../documents/documents.service';
 import { UploadResourceDto } from './dto/upload-resource.dto';
+import {
+  BannerResponse,
+  GroupResponse,
+  PromotionResponse,
+  SemesterResponse,
+} from './types/resource.types';
+import {
+  SaeDocumentResponse,
+  StudentSubmissionResponse,
+} from '../documents/types/document.types';
 
 @Injectable()
 export class ResourcesService {
@@ -18,7 +28,7 @@ export class ResourcesService {
     private readonly documentsService: DocumentsService,
   ) {}
 
-  async findBanners(): Promise<any[]> {
+  async findBanners(): Promise<BannerResponse[]> {
     return this.prisma.banner.findMany({
       orderBy: { createdAt: 'asc' },
     });
@@ -29,16 +39,14 @@ export class ResourcesService {
     dto: UploadResourceDto,
     userId: string,
     role: UserRole,
-  ) {
+  ): Promise<StudentSubmissionResponse | SaeDocumentResponse> {
     if (!file) throw new BadRequestException('Aucun fichier fourni');
 
-    // 1. Vérifier l'existence de la SAE avant l'upload
     const sae = await this.prisma.sae.findUnique({
       where: { id: dto.saeId, deletedAt: null },
     });
     if (!sae) throw new BadRequestException('SAE non trouvée');
 
-    // 2. Upload vers UploadThing
     let uploadResult;
     try {
       uploadResult = await this.utapi.uploadFiles(
@@ -60,7 +68,6 @@ export class ResourcesService {
 
     const fileData = uploadResult.data;
 
-    // 3. Enregistrement en base de données
     try {
       if (role === UserRole.STUDENT) {
         if (!dto.description) {
@@ -93,26 +100,25 @@ export class ResourcesService {
         );
       }
     } catch (error) {
-      // ROLLBACK : Supprimer le fichier d'UploadThing en cas d'échec d'enregistrement en base
       await this.utapi.deleteFiles(fileData.key);
       throw error;
     }
   }
 
-  async findAllPromotions() {
+  async findAllPromotions(): Promise<PromotionResponse[]> {
     return this.prisma.promotion.findMany({
       where: { isActive: true },
       orderBy: { label: 'asc' },
     });
   }
 
-  async findAllGroups() {
+  async findAllGroups(): Promise<GroupResponse[]> {
     return this.prisma.group.findMany({
       orderBy: { name: 'asc' },
     });
   }
 
-  async findAllSemesters() {
+  async findAllSemesters(): Promise<SemesterResponse[]> {
     return this.prisma.semester.findMany({
       orderBy: [{ promotionId: 'asc' }, { number: 'asc' }],
       include: {

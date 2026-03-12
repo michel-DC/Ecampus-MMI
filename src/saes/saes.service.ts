@@ -49,9 +49,10 @@ export class SaesService {
         semesterId: filters.semesterId,
         isPublished: isTeacherOrAdmin ? filters.isPublished : true,
         semester: {
+          promotionId: isStudent ? studentPromotionId : filters.promotionId,
           promotion: {
-            id: filters.promotionId,
-            academicYear: filters.promotionId ? undefined : null, // Par défaut, on ne prend que les promos actuelles
+            academicYear:
+              isStudent || filters.promotionId ? undefined : null,
             students: filters.groupId
               ? { some: { groupId: filters.groupId } }
               : undefined,
@@ -74,7 +75,6 @@ export class SaesService {
                       student: {
                         studentProfile: {
                           groupId: filters.groupId,
-                          // On s'assure que l'étudiant est bien dans la promotion de la SAE
                           promotion: {
                             semesters: {
                               some: {
@@ -93,21 +93,18 @@ export class SaesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Correction des statistiques : croiser Promotion de la SAE + Groupe
     const stats = isTeacherOrAdmin
       ? await Promise.all(
           saes.map(async (sae) => {
             const count = await this.prisma.studentProfile.count({
               where: {
                 promotionId: sae.semester.promotionId,
-                groupId: filters.groupId, // Peut être undefined
+                groupId: filters.groupId,
               },
             });
 
-            // On doit aussi refiltrer les submissions pour qu'elles correspondent au groupe si présent
             let submissionCount = sae.submissions.length;
             if (filters.groupId) {
-              // Si un groupe est filtré, on doit recompter les submissions pour ce groupe précis
               submissionCount = await this.prisma.studentSubmission.count({
                 where: {
                   saeId: sae.id,
@@ -190,7 +187,7 @@ export class SaesService {
         isPublished: true,
         semester: {
           promotion: {
-            academicYear: year ? year : { not: null }, // Si year non fourni, on prend toutes les archives
+            academicYear: year ? year : { not: null },
           },
         },
       },
@@ -266,6 +263,12 @@ export class SaesService {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
+    if (isStudent && sae.semester.promotionId !== studentPromotionId) {
+      throw new ForbiddenException(
+        "Cette SAE n'appartient pas à votre promotion",
+      );
+    }
+
     const isHisPromotion =
       isStudent && sae.semester.promotionId === studentPromotionId;
     const status = computeSaeStatus(sae);
@@ -327,12 +330,12 @@ export class SaesService {
     });
 
     if (!teacher || !teacher.isActive) {
-      throw new NotFoundException('Teacher not found or inactive');
+      throw new NotFoundException('Enseignant non trouvé ou inactif');
     }
 
     if (teacher.role !== UserRole.TEACHER) {
       throw new BadRequestException(
-        'The assigned user must have the TEACHER role',
+        "L'utilisateur assigné doit avoir le rôle TEACHER",
       );
     }
 
@@ -694,7 +697,7 @@ export class SaesService {
 
     if (!isAdmin && !isOwner) {
       throw new ForbiddenException(
-        'Action reserved for ADMIN or the SAE owner',
+        'Action réservée aux administrateurs ou au propriétaire de la SAE',
       );
     }
   }

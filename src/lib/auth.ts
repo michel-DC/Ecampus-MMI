@@ -10,7 +10,9 @@ export const auth = betterAuth({
     provider: 'postgresql',
   }),
   plugins: [
-    admin(),
+    admin({
+      defaultRole: 'STUDENT',
+    }),
   ],
   user: {
     additionalFields: {
@@ -31,7 +33,7 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user: Record<string, any>) => {
+        before: async (user: Record<string, unknown>): Promise<{ data: Record<string, unknown> }> => {
           return {
             data: {
               ...user,
@@ -39,13 +41,21 @@ export const auth = betterAuth({
             },
           };
         },
-        after: async (user) => {
-          if (user.role === 'TEACHER') {
-            await prisma.teacherProfile.create({
-              data: {
-                userId: user.id,
-              },
-            });
+        after: async (user: unknown): Promise<void> => {
+          if (
+            user &&
+            typeof user === 'object' &&
+            'id' in user &&
+            'role' in user
+          ) {
+            const u = user as { id: string; role: string };
+            if (u.role === 'TEACHER') {
+              await prisma.teacherProfile.create({
+                data: {
+                  userId: u.id,
+                },
+              });
+            }
           }
         },
       },
@@ -54,16 +64,6 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 8,
-    fields: {
-      firstname: {
-        type: 'string',
-        required: true,
-      },
-      lastname: {
-        type: 'string',
-        required: true,
-      },
-    },
   },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,

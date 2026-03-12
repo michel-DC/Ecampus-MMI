@@ -21,6 +21,10 @@ import type { JwtPayload } from '../auth/types/auth.types';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import {
+  AnnouncementListResponse,
+  AnnouncementResponse,
+} from './types/announcement.types';
 
 @Controller('api/saes/:saeId/announcements')
 export class AnnouncementsController {
@@ -31,7 +35,7 @@ export class AnnouncementsController {
   async findAll(
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<any> {
+  ): Promise<AnnouncementListResponse & { success: boolean }> {
     const result = await this.announcementsService.findAllBySae(
       saeId,
       user?.role,
@@ -44,7 +48,7 @@ export class AnnouncementsController {
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data: AnnouncementResponse }> {
     const result = await this.announcementsService.findOne(id, user?.role);
     return { success: true, data: result };
   }
@@ -56,7 +60,7 @@ export class AnnouncementsController {
     @Param('saeId') saeId: string,
     @Body() dto: CreateAnnouncementDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data: AnnouncementResponse }> {
     const result = await this.announcementsService.create(saeId, dto, user.sub);
     return { success: true, data: result };
   }
@@ -68,7 +72,7 @@ export class AnnouncementsController {
     @Param('id') id: string,
     @Body() dto: UpdateAnnouncementDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data: AnnouncementResponse }> {
     const result = await this.announcementsService.update(id, dto, user.sub);
     return { success: true, data: result };
   }
@@ -80,7 +84,7 @@ export class AnnouncementsController {
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; message: string }> {
     await this.announcementsService.remove(id, user.sub);
     return { success: true, message: 'Annonce supprimée avec succès' };
   }
