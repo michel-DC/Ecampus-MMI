@@ -10,6 +10,7 @@ import { ResourcesModule } from './resources/resources.module';
 import { DocumentsModule } from './documents/documents.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
+import { GradesModule } from './grades/grades.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { MailModule } from './mail/mail.module';
     ResourcesModule,
     DocumentsModule,
     UsersModule,
+    GradesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

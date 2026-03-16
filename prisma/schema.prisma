@@ -161,6 +161,7 @@ model Sae {
   announcements Announcement[]
   documents     SaeDocument[]
   submissions   StudentSubmission[]
+  gradeCategories GradeCategory[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -253,9 +254,40 @@ model StudentSubmission {
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  sae     Sae  @relation(fields: [saeId], references: [id], onDelete: Cascade)
-  student user @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  sae     Sae     @relation(fields: [saeId], references: [id], onDelete: Cascade)
+  student user    @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  grades  Grade[]
 
   @@unique([saeId, studentId])
   @@index([saeId])
+}
+
+model GradeCategory {
+  id    String @id @default(uuid())
+  saeId String
+  name  String
+
+  sae    Sae     @relation(fields: [saeId], references: [id], onDelete: Cascade)
+  grades Grade[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([saeId])
+}
+
+model Grade {
+  id           String @id @default(uuid())
+  categoryId   String
+  submissionId String
+  value        Float
+
+  category   GradeCategory     @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  submission StudentSubmission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, submissionId])
+  @@index([submissionId])
 }

@@ -197,7 +197,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les étudiants ne voient que les SAE publiées de **leur propre promotion**.
   - Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
 
-### 16. Galerie des Archives (Hall of Fame)
+### 17. Galerie des Archives (Hall of Fame)
 
 - **Méthode** : GET
 - **URL** : /api/saes/archives
@@ -206,7 +206,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Filtres (Query)** : year (ex: 2023).
 - **Note** : Seuls les rendus marqués comme **publics** par les étudiants sont affichés ici.
 
-### 17. Détail d'une SAE
+### 18. Détail d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:id
@@ -215,7 +215,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les étudiants ne peuvent accéder qu'aux SAE de leur propre promotion.
   - Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
 
-### 18. Créer une SAE
+### 19. Créer une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes
@@ -238,27 +238,27 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
 
-### 19. Modifier une SAE
+### 20. Modifier une SAE
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:id
 - **Rôle** : TEACHER (Propriétaire uniquement), ADMIN
 - **Note** : Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
 
-### 20. Publier une SAE
+### 21. Publier une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes/:id/publish
 - **Rôle** : TEACHER (Propriétaire), ADMIN
 - **Note** : Un professeur peut publier uniquement les SAE dont il est propriétaire. Un ADMIN peut publier toutes les SAE.
 
-### 21. Supprimer une SAE
+### 22. Supprimer une SAE
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:id
 - **Rôle** : **ADMIN uniquement**
 
-### 22. Gestion des Invitations
+### 23. Gestion des Invitations
 
 - POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire, ADMIN).
 - GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire, ADMIN).
@@ -269,19 +269,19 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Annonces
 
-### 23. Liste des Annonces
+### 24. Liste des Annonces
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements
 - **Rôle** : PUBLIC (Si SAE publiée)
 
-### 24. Détail d'une Annonce
+### 25. Détail d'une Annonce
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements/:id
 - **Rôle** : PUBLIC (Si SAE publiée)
 
-### 25. Gérer les Annonces
+### 26. Gérer les Annonces
 
 - POST /api/saes/:saeId/announcements : Créer (Rôle: TEACHER Propriétaire/Invité).
 - PATCH /api/saes/:saeId/announcements/:id : Modifier (Rôle: TEACHER Propriétaire/Invité).
@@ -291,13 +291,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Documents et Rendus
 
-### 26. Documents SAE (Enseignants)
+### 27. Documents SAE (Enseignants)
 
 - GET /api/saes/:saeId/documents : Consulter (Rôle: PUBLIC si SAE publiée).
 - POST /api/saes/:saeId/documents : Ajouter (Rôle: TEACHER Propriétaire/Invité).
 - DELETE /api/saes/:saeId/documents/:documentId : Supprimer (Rôle: TEACHER Propriétaire/Invité).
 
-### 27. Rendus (Étudiants)
+### 28. Rendus (Étudiants)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/submission
@@ -317,13 +317,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : Le champ `isPublic` (défaut: `false`) détermine si le rendu sera visible par les autres étudiants et le public.
 
-### 28. Consulter son propre rendu
+### 29. Consulter son propre rendu
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submission/me
 - **Rôle** : STUDENT concerné
 
-### 29. Liste des Rendus (Galerie)
+### 30. Liste des Rendus (Galerie)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submissions
@@ -333,3 +333,83 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les ADMINs, propriétaires et invités de la SAE voient **tous** les rendus.
   - Les autres utilisateurs ne voient que les rendus marqués comme **publics**.
   - Un étudiant voit toujours son propre rendu.
+
+---
+
+## Module Notation (Grades)
+
+### 31. Liste des Catégories de Notes
+
+- **Méthode** : GET
+- **URL** : `/api/saes/:saeId/grade-categories`
+- **Rôle** : PUBLIC (Si SAE publiée) / TEACHER / ADMIN
+- **Description** : Liste les catégories de notes (ex: Qualité du code, Design) définies pour une SAE.
+
+### 32. Consulter Toutes les Notes d'une SAE (Tableau de bord)
+
+- **Méthode** : GET
+- **URL** : `/api/saes/:saeId/grades`
+- **Rôle** : PUBLIC (Si SAE publiée)
+- **Description** : Retourne la liste complète des étudiants ayant rendu un travail pour cette SAE avec leurs notes par catégorie et leur moyenne. Idéal pour un affichage public des résultats.
+
+### 33. Gérer les Catégories de Notes
+
+- **Méthode** : POST
+- **URL** : `/api/saes/:saeId/grade-categories`
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Body** :
+```json
+{
+  "name": "Nom de la catégorie"
+}
+```
+- **Note** : Création possible uniquement une fois la SAE terminée (`now > dueDate`).
+
+### 34. Exporter le Tableau de Notation (Excel)
+
+- **Méthode** : GET
+- **URL** : `/api/saes/:saeId/grades/export`
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Description** : Télécharge un fichier `.xlsx` pré-rempli contenant la liste des étudiants ayant rendu un travail et les colonnes de catégories pour la saisie des notes.
+- **Note** : Export possible uniquement après la `dueDate`.
+
+### 35. Importer les Notes (Excel)
+
+- **Méthode** : POST
+- **URL** : `/api/saes/:saeId/grades/import`
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Body (formData)** :
+  - file : Le fichier Excel rempli.
+- **Description** : Met à jour massivement les notes des étudiants à partir du fichier Excel. Les identifiants masqués dans le fichier garantissent l'intégrité des données.
+- **Note** : Import possible uniquement après la `dueDate`.
+
+### 36. Saisir/Modifier les Notes d'un Rendu (Manuel)
+
+- **Méthode** : POST
+- **URL** : `/api/submissions/:submissionId/grades`
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Body** :
+```json
+{
+  "grades": [
+    { "categoryId": "UUID_CATEGORIE_1", "value": 15.5 },
+    { "categoryId": "UUID_CATEGORIE_2", "value": 18 }
+  ]
+}
+```
+- **Note** : Saisie possible uniquement après la `dueDate`. Les notes doivent être entre 0 et 20.
+
+### 37. Consulter les Notes d'un Rendu
+
+- **Méthode** : GET
+- **URL** : `/api/submissions/:submissionId/grades`
+- **Rôle** : PUBLIC
+- **Description** : Retourne le détail des notes par catégorie pour un rendu spécifique, ainsi que la moyenne calculée.
+
+### 38. Synthèse de mes Notes (Étudiant)
+
+- **Méthode** : GET
+- **URL** : `/api/grades/me`
+- **Rôle** : STUDENT uniquement
+- **Description** : Retourne la liste de tous les rendus de l'étudiant avec leurs notes respectives pour toutes les SAE, ainsi que sa moyenne générale globale.
