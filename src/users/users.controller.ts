@@ -16,7 +16,8 @@ export class UsersController {
   @Roles(UserRole.TEACHER, UserRole.ADMIN)
   async findAll(
     @Query() filters: UserFiltersDto,
-  ): Promise<UserSearchResponse[]> {
-    return this.usersService.findAll(filters);
+  ): Promise<{ success: boolean; data: UserSearchResponse[] }> {
+    const data = await this.usersService.findAll(filters);
+    return { success: true, data };
   }
 }

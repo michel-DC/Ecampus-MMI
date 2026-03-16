@@ -175,31 +175,39 @@ export class DocumentsService {
         saeId,
         studentId,
         url: dto.url,
-        name: dto.name,
+        name: dto.fileName,
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
+        isPublic: dto.isPublic ?? false,
       },
       update: {
         url: dto.url,
-        name: dto.name,
+        name: dto.fileName,
         mimeType: dto.mimeType,
         description: dto.description,
         imageUrl: dto.imageUrl,
+        isPublic: dto.isPublic,
         submittedAt: new Date(),
       },
-      include: { student: { select: { name: true } } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
     });
 
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName: submission.student.name,
+      name: {
+        firstname: submission.student.firstname,
+        lastname: submission.student.lastname,
+      },
       url: submission.url,
-      name: submission.name,
+      fileName: submission.name,
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
+      isPublic: submission.isPublic,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -211,7 +219,9 @@ export class DocumentsService {
   ): Promise<StudentSubmissionResponse> {
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { saeId_studentId: { saeId, studentId } },
-      include: { student: { select: { name: true } } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
     });
 
     if (!submission)
@@ -220,12 +230,16 @@ export class DocumentsService {
     return {
       id: submission.id,
       saeId: submission.saeId,
-      studentName: submission.student.name,
+      name: {
+        firstname: submission.student.firstname,
+        lastname: submission.student.lastname,
+      },
       url: submission.url,
-      name: submission.name,
+      fileName: submission.name,
       mimeType: submission.mimeType,
       description: submission.description,
       imageUrl: submission.imageUrl,
+      isPublic: submission.isPublic,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -233,38 +247,61 @@ export class DocumentsService {
 
   async findAllSubmissions(
     saeId: string,
+    requestingUserId?: string,
     requestingUserRole?: UserRole,
   ): Promise<StudentSubmissionResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: { isPublished: true },
+      select: {
+        isPublished: true,
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
 
-    const isTeacherOrAdmin =
-      requestingUserRole === UserRole.TEACHER ||
-      requestingUserRole === UserRole.ADMIN;
+    const isAdmin = requestingUserRole === UserRole.ADMIN;
+    const isOwner = sae.createdById === requestingUserId;
+    const isInvited = sae.invitations.some(
+      (inv) => inv.userId === requestingUserId,
+    );
 
-    if (!sae.isPublished && !isTeacherOrAdmin) {
+    const canSeePrivateSubmissions = isAdmin || isOwner || isInvited;
+
+    if (!sae.isPublished && !canSeePrivateSubmissions) {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
     }
 
     const submissions = await this.prisma.studentSubmission.findMany({
-      where: { saeId },
-      include: { student: { select: { name: true } } },
+      where: {
+        saeId,
+        OR: canSeePrivateSubmissions
+          ? undefined
+          : [
+              { isPublic: true },
+              { studentId: requestingUserId || 'NONE' },
+            ],
+      },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
       orderBy: { submittedAt: 'desc' },
     });
 
     return submissions.map((s) => ({
       id: s.id,
       saeId: s.saeId,
-      studentName: s.student.name,
+      name: {
+        firstname: s.student.firstname,
+        lastname: s.student.lastname,
+      },
       url: s.url,
-      name: s.name,
+      fileName: s.name,
       mimeType: s.mimeType,
       description: s.description,
       imageUrl: s.imageUrl,
+      isPublic: s.isPublic,
       submittedAt: s.submittedAt,
       updatedAt: s.updatedAt,
     }));

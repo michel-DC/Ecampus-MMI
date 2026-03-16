@@ -7,14 +7,36 @@ async function main() {
     '📜 Génération des archives historiques réalistes (2021-2023)...',
   );
 
-  // IDs fournis par l'utilisateur
-  const BANNER_ID = '1bbfa824-fd8a-432a-ab2d-969d2d35c8ef';
-  const THEMATIC_IDS = {
-    WEB: '3f4b204a-262a-4922-aa0e-f41b82abb033',
-    UX: '1e181751-707d-4872-b911-14a4276b2488',
-    COM: 'ef4343fd-c318-479e-9677-84a660fd6e2b',
-    AV: 'bb044067-48ec-4314-9137-66396653e080',
+  const thematics = await prisma.thematic.findMany({
+    where: {
+      code: { in: ['WEB', 'UX', 'COM', 'AV'] },
+    },
+  });
+
+  const thematicMap = {
+    WEB: thematics.find((t) => t.code === 'WEB')?.id,
+    UX: thematics.find((t) => t.code === 'UX')?.id,
+    COM: thematics.find((t) => t.code === 'COM')?.id,
+    AV: thematics.find((t) => t.code === 'AV')?.id,
   };
+
+  if (
+    !thematicMap.WEB ||
+    !thematicMap.UX ||
+    !thematicMap.COM ||
+    !thematicMap.AV
+  ) {
+    throw new Error(
+      "Thématiques manquantes. Veuillez exécuter le seed principal d'abord.",
+    );
+  }
+
+  const banner = await prisma.banner.findFirst();
+  if (!banner) {
+    throw new Error(
+      "Aucune bannière trouvée. Veuillez exécuter le seed principal d'abord.",
+    );
+  }
 
   // 1. Création d'un nouvel enseignant dédié aux archives
   const archiveTeacher = await prisma.user.upsert({
@@ -22,7 +44,8 @@ async function main() {
     update: {},
     create: {
       email: 'archives.mmi@univ-mmi.fr',
-      name: 'Responsable Archives',
+      firstname: 'Responsable',
+      lastname: 'Archives',
       role: UserRole.TEACHER,
       teacherProfile: { create: {} },
     },
@@ -30,12 +53,28 @@ async function main() {
 
   // 2. Création des Étudiants Réalistes (uniques pour ces archives)
   const studentsData = [
-    { name: 'Lucas Martin', email: 'lucas.martin.2023@mmi.fr' },
-    { name: 'Emma Bernard', email: 'emma.bernard.2023@mmi.fr' },
-    { name: 'Thomas Petit', email: 'thomas.petit.2022@mmi.fr' },
-    { name: 'Léa Durand', email: 'lea.durand.2022@mmi.fr' },
-    { name: 'Hugo Leroy', email: 'hugo.leroy.2021@mmi.fr' },
-    { name: 'Chloé Moreau', email: 'chloe.moreau.2021@mmi.fr' },
+    {
+      firstname: 'Lucas',
+      lastname: 'Martin',
+      email: 'lucas.martin.2023@mmi.fr',
+    },
+    {
+      firstname: 'Emma',
+      lastname: 'Bernard',
+      email: 'emma.bernard.2023@mmi.fr',
+    },
+    {
+      firstname: 'Thomas',
+      lastname: 'Petit',
+      email: 'thomas.petit.2022@mmi.fr',
+    },
+    { firstname: 'Léa', lastname: 'Durand', email: 'lea.durand.2022@mmi.fr' },
+    { firstname: 'Hugo', lastname: 'Leroy', email: 'hugo.leroy.2021@mmi.fr' },
+    {
+      firstname: 'Chloé',
+      lastname: 'Moreau',
+      email: 'chloe.moreau.2021@mmi.fr',
+    },
   ];
 
   const students = await Promise.all(
@@ -62,8 +101,8 @@ async function main() {
       title: 'Redesign App Transport',
       description:
         "Refonte complète de l'expérience utilisateur pour l'app de bus locale.",
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.UX,
+      bannerId: banner.id,
+      thematicId: thematicMap.UX,
       semesterId: sem2023.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2023-01-10'),
@@ -90,8 +129,8 @@ async function main() {
       title: 'E-commerce Durable',
       description:
         "Développement d'une boutique en ligne de produits éco-responsables.",
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.WEB,
+      bannerId: banner.id,
+      thematicId: thematicMap.WEB,
       semesterId: sem2023.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2023-04-01'),
@@ -125,8 +164,8 @@ async function main() {
       title: 'Campagne Festival Cinéma',
       description:
         'Stratégie de communication 360 pour un festival de courts-métrages.',
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.COM,
+      bannerId: banner.id,
+      thematicId: thematicMap.COM,
       semesterId: sem2022.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2022-02-15'),
@@ -152,8 +191,8 @@ async function main() {
     data: {
       title: 'Court-métrage Expérimental',
       description: "Réalisation d'une vidéo de 3 minutes sur le thème Demain.",
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.AV,
+      bannerId: banner.id,
+      thematicId: thematicMap.AV,
       semesterId: sem2022.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2022-09-01'),
@@ -188,8 +227,8 @@ async function main() {
       title: 'Identité Brasserie Artisanale',
       description:
         'Création du logo, packaging et site vitrine pour une brasserie.',
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.UX,
+      bannerId: banner.id,
+      thematicId: thematicMap.UX,
       semesterId: sem2021.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2021-01-20'),
@@ -216,8 +255,8 @@ async function main() {
       title: 'Jeu Plateforme 2D',
       description:
         "Développement d'un jeu de plateforme complet sous Unity ou Phaser.",
-      bannerId: BANNER_ID,
-      thematicId: THEMATIC_IDS.WEB,
+      bannerId: banner.id,
+      thematicId: thematicMap.WEB,
       semesterId: sem2021.id,
       createdById: archiveTeacher.id,
       startDate: new Date('2021-05-01'),
@@ -238,9 +277,10 @@ async function main() {
     },
   });
 
-  console.log(
-    '✅ Archives 2021-2023 générées avec succès avec un nouvel enseignant et vos IDs.',
-  );
+  console.log('✅ Archives 2021-2023 générées avec succès!');
+  console.log(`📚 6 étudiants créés`);
+  console.log(`📋 6 SAE créées (2 par année)`);
+  console.log(`🎯 6 rendus ajoutés`);
 }
 
 main()

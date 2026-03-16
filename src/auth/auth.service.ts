@@ -18,7 +18,8 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        name: true,
+        firstname: true,
+        lastname: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -29,7 +30,14 @@ export class AuthService {
       throw new NotFoundException('Utilisateur non trouvé');
     }
 
-    return user;
+    return {
+      id: user.id,
+      email: user.email,
+      name: { firstname: user.firstname, lastname: user.lastname },
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+    };
   }
 
   async completeOnboarding(userId: string, dto: OnboardingDto): Promise<void> {
@@ -57,13 +65,28 @@ export class AuthService {
       throw new NotFoundException('Groupe non trouvé');
     }
 
-    await this.prisma.studentProfile.create({
-      data: {
-        userId,
-        promotionId: dto.promotionId,
-        groupId: dto.groupId,
-      },
-    });
+    const operations: any[] = [
+      this.prisma.studentProfile.create({
+        data: {
+          userId,
+          promotionId: dto.promotionId,
+          groupId: dto.groupId,
+        },
+      }),
+    ];
+
+    if (dto.imageUrl) {
+      operations.push(
+        this.prisma.user.update({
+          where: { id: userId },
+          data: {
+            image: dto.imageUrl,
+          },
+        }),
+      );
+    }
+
+    await this.prisma.$transaction(operations);
   }
 
   async createTeacherProfileIfMissing(userId: string): Promise<void> {

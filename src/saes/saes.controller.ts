@@ -24,6 +24,12 @@ import { CreateSaeDto } from './dto/create-sae.dto';
 import { UpdateSaeDto } from './dto/update-sae.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
 import { SaeFiltersDto } from './dto/sae-filters.dto';
+import {
+  SaeArchiveResponse,
+  SaeInvitationResponse,
+  SaeListResponse,
+  SaeResponse,
+} from './types/sae.types';
 
 @Controller('api/saes')
 export class SaesController {
@@ -34,17 +40,19 @@ export class SaesController {
   async findAll(
     @Query() filters: SaeFiltersDto,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data: SaeResponse[]; total: number }> {
     const result = await this.saesService.findAll(
       filters,
       user?.sub,
       user?.role,
     );
-    return { success: true, ...result };
+    return { success: true, data: result.data, total: result.total };
   }
 
   @Get('archives')
-  async findArchives(@Query('year') year?: string): Promise<any> {
+  async findArchives(
+    @Query('year') year?: string,
+  ): Promise<{ success: boolean; data: SaeArchiveResponse[] }> {
     const result = await this.saesService.findArchives(
       year ? parseInt(year, 10) : undefined,
     );
@@ -56,19 +64,19 @@ export class SaesController {
   async findOne(
     @Param('id') id: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<any> {
+  ): Promise<{ success: boolean; data: SaeResponse }> {
     const result = await this.saesService.findOne(id, user?.sub, user?.role);
     return { success: true, data: result };
   }
 
   @Post()
   @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @Roles(UserRole.ADMIN)
   async create(
     @Body() dto: CreateSaeDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    const result = await this.saesService.create(dto, user.sub);
+  ): Promise<{ success: boolean; data: SaeResponse }> {
+    const result = await this.saesService.create(dto, user);
     return { success: true, data: result };
   }
 
@@ -79,8 +87,8 @@ export class SaesController {
     @Param('id') id: string,
     @Body() dto: UpdateSaeDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    const result = await this.saesService.update(id, dto, user.sub);
+  ): Promise<{ success: boolean; data: SaeResponse }> {
+    const result = await this.saesService.update(id, dto, user);
     return { success: true, data: result };
   }
 
@@ -90,20 +98,20 @@ export class SaesController {
   async publish(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    const result = await this.saesService.publish(id, user.sub);
+  ): Promise<{ success: boolean; data: SaeResponse }> {
+    const result = await this.saesService.publish(id, user);
     return { success: true, data: result };
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
-  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @Roles(UserRole.ADMIN)
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    await this.saesService.remove(id, user.sub);
+  ): Promise<{ success: boolean; message: string }> {
+    await this.saesService.remove(id, user);
     return { success: true, message: 'SAE supprimée avec succès' };
   }
 
@@ -114,8 +122,8 @@ export class SaesController {
     @Param('id') id: string,
     @Body() dto: CreateInvitationDto,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    const result = await this.saesService.createInvitation(id, dto, user.sub);
+  ): Promise<{ success: boolean; data: SaeInvitationResponse }> {
+    const result = await this.saesService.createInvitation(id, dto, user);
     return { success: true, data: result };
   }
 
@@ -125,8 +133,8 @@ export class SaesController {
   async findInvitations(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    const result = await this.saesService.findInvitations(id, user.sub);
+  ): Promise<{ success: boolean; data: SaeInvitationResponse[] }> {
+    const result = await this.saesService.findInvitations(id, user);
     return { success: true, data: result };
   }
 
@@ -137,8 +145,8 @@ export class SaesController {
     @Param('id') id: string,
     @Param('invitationId') invitationId: string,
     @CurrentUser() user: JwtPayload,
-  ): Promise<any> {
-    await this.saesService.removeInvitation(id, invitationId, user.sub);
+  ): Promise<{ success: boolean; message: string }> {
+    await this.saesService.removeInvitation(id, invitationId, user);
     return { success: true, message: 'Invitation supprimée avec succès' };
   }
 }

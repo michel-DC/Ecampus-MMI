@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+import { JwtPayload } from '../auth/types/auth.types';
 import { CreateSaeDto } from './dto/create-sae.dto';
 import { UpdateSaeDto } from './dto/update-sae.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -48,9 +49,10 @@ export class SaesService {
         semesterId: filters.semesterId,
         isPublished: isTeacherOrAdmin ? filters.isPublished : true,
         semester: {
+          promotionId: isStudent ? studentPromotionId : filters.promotionId,
           promotion: {
-            id: filters.promotionId,
-            academicYear: filters.promotionId ? undefined : null, // Par défaut, on ne prend que les promos actuelles
+            academicYear:
+              isStudent || filters.promotionId ? undefined : null,
             students: filters.groupId
               ? { some: { groupId: filters.groupId } }
               : undefined,
@@ -58,7 +60,9 @@ export class SaesService {
         },
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
         semester: { select: { id: true, promotionId: true } },
@@ -71,7 +75,6 @@ export class SaesService {
                       student: {
                         studentProfile: {
                           groupId: filters.groupId,
-                          // On s'assure que l'étudiant est bien dans la promotion de la SAE
                           promotion: {
                             semesters: {
                               some: {
@@ -90,21 +93,18 @@ export class SaesService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Correction des statistiques : croiser Promotion de la SAE + Groupe
     const stats = isTeacherOrAdmin
       ? await Promise.all(
           saes.map(async (sae) => {
             const count = await this.prisma.studentProfile.count({
               where: {
                 promotionId: sae.semester.promotionId,
-                groupId: filters.groupId, // Peut être undefined
+                groupId: filters.groupId,
               },
             });
 
-            // On doit aussi refiltrer les submissions pour qu'elles correspondent au groupe si présent
             let submissionCount = sae.submissions.length;
             if (filters.groupId) {
-              // Si un groupe est filtré, on doit recompter les submissions pour ce groupe précis
               submissionCount = await this.prisma.studentSubmission.count({
                 where: {
                   saeId: sae.id,
@@ -149,8 +149,12 @@ export class SaesService {
         studentCount: isTeacherOrAdmin ? saeStats?.studentCount : undefined,
         status,
         createdBy: {
-          name: sae.createdBy.name,
+          id: sae.createdBy.id,
           email: sae.createdBy.email,
+          name: {
+            firstname: sae.createdBy.firstname,
+            lastname: sae.createdBy.lastname,
+          },
         },
         createdAt: sae.createdAt,
         updatedAt: sae.updatedAt,
@@ -183,7 +187,7 @@ export class SaesService {
         isPublished: true,
         semester: {
           promotion: {
-            academicYear: year ? year : { not: null }, // Si year non fourni, on prend toutes les archives
+            academicYear: year ? year : { not: null },
           },
         },
       },
@@ -193,9 +197,11 @@ export class SaesService {
           include: { promotion: { select: { academicYear: true } } },
         },
         submissions: {
-          where: { imageUrl: { not: null } },
+          where: { imageUrl: { not: null }, isPublic: true },
           take: 1,
-          include: { student: { select: { name: true } } },
+          include: {
+            student: { select: { firstname: true, lastname: true } },
+          },
         },
       },
       orderBy: { semester: { promotion: { academicYear: 'desc' } } },
@@ -209,7 +215,12 @@ export class SaesService {
       description: sae.description,
       imageUrl: sae.submissions[0]?.imageUrl,
       url: sae.submissions[0]?.url,
-      studentName: sae.submissions[0]?.student.name,
+      name: sae.submissions[0]
+        ? {
+            firstname: sae.submissions[0].student.firstname,
+            lastname: sae.submissions[0].student.lastname,
+          }
+        : undefined,
     }));
   }
 
@@ -235,7 +246,9 @@ export class SaesService {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
         semester: { select: { promotionId: true } },
@@ -251,6 +264,12 @@ export class SaesService {
 
     if (!sae.isPublished && !isTeacherOrAdmin) {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
+    }
+
+    if (isStudent && sae.semester.promotionId !== studentPromotionId) {
+      throw new ForbiddenException(
+        "Cette SAE n'appartient pas à votre promotion",
+      );
     }
 
     const isHisPromotion =
@@ -285,21 +304,43 @@ export class SaesService {
       studentCount,
       status,
       createdBy: {
-        name: sae.createdBy.name,
+        id: sae.createdBy.id,
         email: sae.createdBy.email,
+        name: {
+          firstname: sae.createdBy.firstname,
+          lastname: sae.createdBy.lastname,
+        },
       },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
     };
   }
 
-  async create(dto: CreateSaeDto, createdById: string): Promise<SaeResponse> {
+  async create(
+    dto: CreateSaeDto,
+    requestingUser: JwtPayload,
+  ): Promise<SaeResponse> {
     this.validateDates(dto.startDate, dto.dueDate);
 
     const semester = await this.prisma.semester.findUnique({
       where: { id: dto.semesterId },
     });
     if (!semester) throw new NotFoundException('Semestre non trouvé');
+
+    const teacher = await this.prisma.user.findUnique({
+      where: { id: dto.teacherId },
+      select: { id: true, role: true, isActive: true },
+    });
+
+    if (!teacher || !teacher.isActive) {
+      throw new NotFoundException('Enseignant non trouvé ou inactif');
+    }
+
+    if (teacher.role !== UserRole.TEACHER) {
+      throw new BadRequestException(
+        "L'utilisateur assigné doit avoir le rôle TEACHER",
+      );
+    }
 
     const thematic = await this.prisma.thematic.findUnique({
       where: { id: dto.thematicId },
@@ -322,10 +363,12 @@ export class SaesService {
         startDate: new Date(dto.startDate),
         dueDate: new Date(dto.dueDate),
         isPublished: dto.isPublished ?? false,
-        createdById,
+        createdById: dto.teacherId,
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -351,8 +394,12 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: sae.createdBy.name,
+        id: sae.createdBy.id,
         email: sae.createdBy.email,
+        name: {
+          firstname: sae.createdBy.firstname,
+          lastname: sae.createdBy.lastname,
+        },
       },
       createdAt: sae.createdAt,
       updatedAt: sae.updatedAt,
@@ -362,14 +409,14 @@ export class SaesService {
   async update(
     id: string,
     dto: UpdateSaeDto,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     if (dto.startDate || dto.dueDate) {
       const startDate = dto.startDate ?? sae.startDate.toISOString();
@@ -405,7 +452,9 @@ export class SaesService {
         isPublished: dto.isPublished,
       },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -432,21 +481,25 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: updated.createdBy.name,
+        id: updated.createdBy.id,
         email: updated.createdBy.email,
+        name: {
+          firstname: updated.createdBy.firstname,
+          lastname: updated.createdBy.lastname,
+        },
       },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };
   }
 
-  async publish(id: string, requestingUserId: string): Promise<SaeResponse> {
+  async publish(id: string, requestingUser: JwtPayload): Promise<SaeResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     if (sae.isPublished) throw new ConflictException('La SAE est déjà publiée');
     if (!sae.startDate || !sae.dueDate) {
@@ -459,7 +512,9 @@ export class SaesService {
       where: { id },
       data: { isPublished: true },
       include: {
-        createdBy: { select: { id: true, name: true, email: true } },
+        createdBy: {
+          select: { id: true, email: true, firstname: true, lastname: true },
+        },
         thematic: { select: { id: true, code: true, label: true } },
         banner: { select: { id: true, url: true } },
       },
@@ -486,21 +541,25 @@ export class SaesService {
       isUrgent,
       status,
       createdBy: {
-        name: updated.createdBy.name,
+        id: updated.createdBy.id,
         email: updated.createdBy.email,
+        name: {
+          firstname: updated.createdBy.firstname,
+          lastname: updated.createdBy.lastname,
+        },
       },
       createdAt: updated.createdAt,
       updatedAt: updated.updatedAt,
     };
   }
 
-  async remove(id: string, requestingUserId: string): Promise<void> {
+  async remove(id: string, requestingUser: JwtPayload): Promise<void> {
     const sae = await this.prisma.sae.findUnique({
       where: { id, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     await this.prisma.sae.update({
       where: { id },
@@ -511,18 +570,24 @@ export class SaesService {
   async createInvitation(
     saeId: string,
     dto: CreateInvitationDto,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeInvitationResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const targetUser = await this.prisma.user.findUnique({
       where: { id: dto.userId },
-      select: { id: true, name: true, role: true, isActive: true },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        role: true,
+        isActive: true,
+      },
     });
 
     if (!targetUser || !targetUser.isActive) {
@@ -535,7 +600,7 @@ export class SaesService {
       );
     }
 
-    if (targetUser.id === requestingUserId) {
+    if (targetUser.id === requestingUser.sub) {
       throw new BadRequestException(
         'Vous ne pouvez pas vous inviter vous-même',
       );
@@ -557,25 +622,28 @@ export class SaesService {
       id: invitation.id,
       saeId: invitation.saeId,
       userId: invitation.userId,
-      name: targetUser.name,
+      name: {
+        firstname: targetUser.firstname,
+        lastname: targetUser.lastname,
+      },
       createdAt: invitation.createdAt,
     };
   }
 
   async findInvitations(
     saeId: string,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<SaeInvitationResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const invitations = await this.prisma.saeInvitation.findMany({
       where: { saeId },
-      include: { user: { select: { name: true } } },
+      include: { user: { select: { firstname: true, lastname: true } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -583,7 +651,10 @@ export class SaesService {
       id: inv.id,
       saeId: inv.saeId,
       userId: inv.userId,
-      name: inv.user.name,
+      name: {
+        firstname: inv.user.firstname,
+        lastname: inv.user.lastname,
+      },
       createdAt: inv.createdAt,
     }));
   }
@@ -591,7 +662,7 @@ export class SaesService {
   async removeInvitation(
     saeId: string,
     invitationId: string,
-    requestingUserId: string,
+    requestingUser: JwtPayload,
   ): Promise<void> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
@@ -599,7 +670,7 @@ export class SaesService {
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertIsOwner(sae.createdById, requestingUserId);
+    this.assertIsOwner(sae.createdById, requestingUser);
 
     const invitation = await this.prisma.saeInvitation.findUnique({
       where: { id: invitationId },
@@ -629,10 +700,13 @@ export class SaesService {
     }
   }
 
-  private assertIsOwner(createdById: string, requestingUserId: string): void {
-    if (createdById !== requestingUserId) {
+  private assertIsOwner(createdById: string, requestingUser: JwtPayload): void {
+    const isAdmin = requestingUser.role === UserRole.ADMIN;
+    const isOwner = createdById === requestingUser.sub;
+
+    if (!isAdmin && !isOwner) {
       throw new ForbiddenException(
-        "Vous n'êtes pas le propriétaire de cette SAE",
+        'Action réservée aux administrateurs ou au propriétaire de la SAE',
       );
     }
   }

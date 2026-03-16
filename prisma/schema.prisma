@@ -18,9 +18,12 @@ model user {
   email         String    @unique
   emailVerified Boolean   @default(false)
   name          String
+  firstname     String
+  lastname      String
   image         String?
   role          UserRole  @default(STUDENT)
   isActive      Boolean   @default(true)
+  banned        Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -246,6 +249,7 @@ model StudentSubmission {
   mimeType    String
   description String   @db.Text
   imageUrl    String?
+  isPublic    Boolean  @default(false)
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

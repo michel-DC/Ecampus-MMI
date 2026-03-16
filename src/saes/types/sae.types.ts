@@ -1,8 +1,11 @@
+import { UserName } from '../../auth/types/auth.types';
+
 export type SaeStatus = 'draft' | 'upcoming' | 'ongoing' | 'finished';
 
 export interface SaeAuthor {
-  name: string;
+  id: string;
   email: string;
+  name: UserName;
 }
 
 export interface SaeResponse {
@@ -32,9 +35,9 @@ export interface SaeArchiveResponse {
   year: number;
   thematic: string;
   description: string;
-  imageUrl?: string | null; // Image du rendu phare
-  url?: string | null;      // Lien vers le rendu phare
-  studentName?: string;
+  imageUrl?: string | null;
+  url?: string | null;
+  name?: UserName;
 }
 
 export interface SaeListResponse {
@@ -46,7 +49,7 @@ export interface SaeInvitationResponse {
   id: string;
   saeId: string;
   userId: string;
-  name: string;
+  name: UserName;
   createdAt: Date;
 }
 

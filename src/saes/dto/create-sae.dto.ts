@@ -24,6 +24,9 @@ export class CreateSaeDto {
   @IsUUID()
   semesterId: string;
 
+  @IsString()
+  teacherId: string;
+
   @IsUUID()
   thematicId: string;
 

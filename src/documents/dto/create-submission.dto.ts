@@ -1,11 +1,11 @@
-import { IsString, IsUrl, IsOptional } from 'class-validator';
+import { IsString, IsUrl, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateSubmissionDto {
   @IsUrl()
   url: string;
 
   @IsString()
-  name: string;
+  fileName: string;
 
   @IsString()
   mimeType: string;
@@ -16,4 +16,8 @@ export class CreateSubmissionDto {
   @IsUrl()
   @IsOptional()
   imageUrl?: string;
+
+  @IsBoolean()
+  @IsOptional()
+  isPublic?: boolean;
 }

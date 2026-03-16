@@ -1,4 +1,5 @@
 import { DocumentType } from '@prisma/client';
+import { UserName } from '../../auth/types/auth.types';
 
 export interface SaeDocumentResponse {
   id: string;
@@ -13,12 +14,13 @@ export interface SaeDocumentResponse {
 export interface StudentSubmissionResponse {
   id: string;
   saeId: string;
-  studentName: string;
+  name: UserName;
   url: string;
-  name: string;
+  fileName: string;
   mimeType: string;
   description: string;
   imageUrl?: string | null;
+  isPublic: boolean;
   submittedAt: Date;
   updatedAt: Date;
 }
