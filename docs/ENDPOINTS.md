@@ -350,7 +350,8 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grades`
 - **Rôle** : PUBLIC (Si SAE publiée)
-- **Description** : Retourne la liste complète des étudiants ayant rendu un travail pour cette SAE avec leurs notes par catégorie et leur moyenne. Idéal pour un affichage public des résultats.
+- **Description** : Retourne la liste des étudiants ayant rendu un travail pour cette SAE avec leurs notes par catégorie et leur moyenne.
+- **Note** : Les rendus marqués comme **privés** (`isPublic: false`) sont automatiquement masqués pour le public et les autres étudiants. Seuls les enseignants de la SAE et les administrateurs voient l'intégralité des notes.
 
 ### 33. Gérer les Catégories de Notes
 
@@ -404,8 +405,9 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Méthode** : GET
 - **URL** : `/api/submissions/:submissionId/grades`
-- **Rôle** : PUBLIC
+- **Rôle** : PUBLIC (Conditionnel)
 - **Description** : Retourne le détail des notes par catégorie pour un rendu spécifique, ainsi que la moyenne calculée.
+- **Note** : Si le rendu est privé (`isPublic: false`), l'accès est restreint à l'auteur du rendu, aux enseignants de la SAE et aux administrateurs. Une erreur `403 Forbidden` est retournée sinon.
 
 ### 38. Synthèse de mes Notes (Étudiant)
 

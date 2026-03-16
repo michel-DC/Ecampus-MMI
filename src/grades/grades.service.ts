@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import * as XLSX from 'xlsx';
-import { Prisma } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import {
   GradeCategoryResponse,
   MyGradesResponse,
@@ -26,11 +26,21 @@ export class GradesService {
   ): Promise<GradeCategoryResponse> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: { dueDate: true, createdById: true, invitations: { select: { userId: true } } },
+      select: {
+        dueDate: true,
+        createdById: true,
+        invitations: {
+          select: { userId: true },
+        },
+      },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertCanManageGrades(sae.createdById, sae.invitations, requestingUserId);
+    this.assertCanManageGrades(
+      sae.createdById,
+      sae.invitations,
+      requestingUserId,
+    );
 
     if (new Date() <= sae.dueDate) {
       throw new BadRequestException(
@@ -52,14 +62,19 @@ export class GradesService {
     });
   }
 
-  async exportGradesToExcel(saeId: string, requestingUserId: string): Promise<Buffer> {
+  async exportGradesToExcel(
+    saeId: string,
+    requestingUserId: string,
+  ): Promise<Buffer> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
       include: {
         gradeCategories: { orderBy: { createdAt: 'asc' } },
         submissions: {
           include: {
-            student: { select: { firstname: true, lastname: true, email: true } },
+            student: {
+              select: { firstname: true, lastname: true, email: true },
+            },
             grades: true,
           },
         },
@@ -68,17 +83,28 @@ export class GradesService {
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertCanManageGrades(sae.createdById, sae.invitations, requestingUserId);
+    this.assertCanManageGrades(
+      sae.createdById,
+      sae.invitations,
+      requestingUserId,
+    );
 
     if (new Date() <= sae.dueDate) {
-      throw new BadRequestException("L'export n'est possible qu'une fois la SAE terminée");
+      throw new BadRequestException(
+        "L'export n'est possible qu'une fois la SAE terminée",
+      );
     }
 
     const categories = sae.gradeCategories;
     const submissions = sae.submissions;
 
-    const row1 = ['', '', '', ...categories.map((c) => c.id)];
-    const row2 = ['ID Rendu', 'Étudiant', 'Email', ...categories.map((c) => c.name)];
+    const row1 = ['METADATA_IDS', '', '', ...categories.map((c) => c.id)];
+    const row2 = [
+      'ID Rendu',
+      'Étudiant',
+      'Email',
+      ...categories.map((c) => c.name),
+    ];
     const data = [row1, row2];
 
     submissions.forEach((sub) => {
@@ -108,41 +134,77 @@ export class GradesService {
   ): Promise<void> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: { dueDate: true, createdById: true, invitations: { select: { userId: true } } },
+      select: {
+        dueDate: true,
+        createdById: true,
+        invitations: { select: { userId: true } },
+        gradeCategories: { select: { id: true } },
+      },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    this.assertCanManageGrades(sae.createdById, sae.invitations, requestingUserId);
+    this.assertCanManageGrades(
+      sae.createdById,
+      sae.invitations,
+      requestingUserId,
+    );
 
     if (new Date() <= sae.dueDate) {
-      throw new BadRequestException("L'import n'est possible qu'une fois la SAE terminée");
+      throw new BadRequestException(
+        "L'import n'est possible qu'une fois la SAE terminée",
+      );
     }
 
     const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
     const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+      header: 1,
+    }) as any[][];
 
-    const categoryIds = jsonData[0].slice(3);
+    if (jsonData.length < 3 || jsonData[0][0] !== 'METADATA_IDS') {
+      throw new BadRequestException(
+        'Format de fichier invalide ou ligne de métadonnées manquante',
+      );
+    }
+
+    const categoryIdsFromExcel = jsonData[0].slice(3);
+    const validCategoryIds = sae.gradeCategories.map((c) => c.id);
+
     const gradeDataRows = jsonData.slice(2);
     const operations: Prisma.PrismaPromise<any>[] = [];
 
+    // Récupérer tous les IDs de rendus existants pour cette SAE pour validation
+    const existingSubmissions = await this.prisma.studentSubmission.findMany({
+      where: { saeId },
+      select: { id: true },
+    });
+    const validSubmissionIds = new Set(existingSubmissions.map((s) => s.id));
+
     for (const row of gradeDataRows) {
       const submissionId = row[0];
-      if (!submissionId) continue;
+      if (!submissionId || !validSubmissionIds.has(submissionId)) continue;
 
-      categoryIds.forEach((categoryId, index) => {
+      categoryIdsFromExcel.forEach((categoryId, index) => {
+        if (!validCategoryIds.includes(categoryId)) return;
+
         const rawValue = row[index + 3];
         if (rawValue === undefined || rawValue === '') return;
 
         const value = parseFloat(rawValue);
         if (isNaN(value) || value < 0 || value > 20) {
-          throw new BadRequestException(`Note invalide : ${rawValue}. Doit être entre 0 et 20.`);
+          throw new BadRequestException(
+            `Note invalide : ${rawValue}. Doit être entre 0 et 20.`,
+          );
         }
 
         operations.push(
           this.prisma.grade.upsert({
             where: { categoryId_submissionId: { categoryId, submissionId } },
-            create: { categoryId, submissionId, value },
+            create: {
+              categoryId,
+              submissionId,
+              value,
+            },
             update: { value },
           }),
         );
@@ -162,40 +224,93 @@ export class GradesService {
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        sae: { select: { dueDate: true, createdById: true, invitations: { select: { userId: true } } } },
+        sae: {
+          select: {
+            id: true,
+            dueDate: true,
+            createdById: true,
+            invitations: { select: { userId: true } },
+          },
+        },
       },
     });
 
     if (!submission) throw new NotFoundException('Rendu non trouvé');
-    this.assertCanManageGrades(submission.sae.createdById, submission.sae.invitations, requestingUserId);
+    this.assertCanManageGrades(
+      submission.sae.createdById,
+      submission.sae.invitations,
+      requestingUserId,
+    );
 
     if (new Date() <= submission.sae.dueDate) {
-      throw new BadRequestException("La notation n'est possible qu'une fois la SAE terminée");
+      throw new BadRequestException(
+        "La notation n'est possible qu'une fois la SAE terminée",
+      );
     }
 
-    await this.prisma.$transaction(
-      grades.map((g) =>
+    // Valider que les catégories appartiennent bien à la SAE
+    const validCategories = await this.prisma.gradeCategory.findMany({
+      where: { saeId: submission.saeId },
+      select: { id: true },
+    });
+    const validIds = validCategories.map((c) => c.id);
+
+    const operations = grades
+      .filter((g) => validIds.includes(g.categoryId))
+      .map((g) =>
         this.prisma.grade.upsert({
-          where: { categoryId_submissionId: { categoryId: g.categoryId, submissionId } },
+          where: {
+            categoryId_submissionId: { categoryId: g.categoryId, submissionId },
+          },
           create: { categoryId: g.categoryId, submissionId, value: g.value },
           update: { value: g.value },
         }),
-      ),
-    );
+      );
 
-    return this.findSubmissionGrades(submissionId);
+    if (operations.length > 0) {
+      await this.prisma.$transaction(operations);
+    }
+
+    return this.findSubmissionGrades(
+      submissionId,
+      requestingUserId,
+      UserRole.TEACHER,
+    ); // Rôle forcé ici car on vient de noter
   }
 
-  async findSubmissionGrades(submissionId: string): Promise<SubmissionGradesResponse> {
+  async findSubmissionGrades(
+    submissionId: string,
+    requestingUserId?: string,
+    requestingUserRole?: UserRole,
+  ): Promise<SubmissionGradesResponse> {
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { id: submissionId },
       include: {
-        student: { select: { firstname: true, lastname: true } },
+        student: { select: { id: true, firstname: true, lastname: true } },
         grades: { include: { category: { select: { name: true } } } },
+        sae: {
+          select: {
+            createdById: true,
+            invitations: { select: { userId: true } },
+          },
+        },
       },
     });
 
     if (!submission) throw new NotFoundException('Rendu non trouvé');
+
+    const isTeacherOrAdmin =
+      requestingUserRole === UserRole.ADMIN ||
+      submission.sae.createdById === requestingUserId ||
+      submission.sae.invitations.some((inv) => inv.userId === requestingUserId);
+
+    const isOwner = submission.student.id === requestingUserId;
+
+    if (!submission.isPublic && !isTeacherOrAdmin && !isOwner) {
+      throw new ForbiddenException(
+        "Ce rendu est privé. Seuls les enseignants ou l'auteur peuvent voir les notes.",
+      );
+    }
 
     const mappedGrades = submission.grades.map((g) => ({
       id: g.id,
@@ -204,13 +319,18 @@ export class GradesService {
       value: g.value,
     }));
 
-    const average = mappedGrades.length > 0
-      ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) / mappedGrades.length
-      : 0;
+    const average =
+      mappedGrades.length > 0
+        ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) /
+          mappedGrades.length
+        : 0;
 
     return {
       submissionId: submission.id,
-      studentName: { firstname: submission.student.firstname, lastname: submission.student.lastname },
+      studentName: {
+        firstname: submission.student.firstname,
+        lastname: submission.student.lastname,
+      },
       grades: mappedGrades,
       average: parseFloat(average.toFixed(2)),
     };
@@ -235,37 +355,62 @@ export class GradesService {
         value: g.value,
       }));
 
-      const average = mappedGrades.length > 0
-        ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) / mappedGrades.length
-        : 0;
+      const average =
+        mappedGrades.length > 0
+          ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) /
+            mappedGrades.length
+          : 0;
 
       return {
         submissionId: s.id,
         saeTitle: s.sae.title,
-        studentName: { firstname: s.student.firstname, lastname: s.student.lastname },
+        studentName: {
+          firstname: s.student.firstname,
+          lastname: s.student.lastname,
+        },
         grades: mappedGrades,
         average: parseFloat(average.toFixed(2)),
       };
     });
 
-    const globalAverage = data.length > 0
-      ? data.reduce((acc, curr) => acc + curr.average, 0) / data.length
-      : 0;
+    const globalAverage =
+      data.length > 0
+        ? data.reduce((acc, curr) => acc + curr.average, 0) / data.length
+        : 0;
 
     return { data, globalAverage: parseFloat(globalAverage.toFixed(2)) };
   }
 
-  async findAllSaeGrades(saeId: string): Promise<SubmissionGradesResponse[]> {
+  async findAllSaeGrades(
+    saeId: string,
+    requestingUserId?: string,
+    requestingUserRole?: UserRole,
+  ): Promise<SubmissionGradesResponse[]> {
     const sae = await this.prisma.sae.findUnique({
       where: { id: saeId, deletedAt: null },
-      select: { isPublished: true },
+      select: {
+        isPublished: true,
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
     });
 
     if (!sae) throw new NotFoundException('SAE non trouvée');
-    if (!sae.isPublished) throw new ForbiddenException("Cette SAE n'est pas encore publiée");
+    if (!sae.isPublished)
+      throw new ForbiddenException("Cette SAE n'est pas encore publiée");
+
+    const isTeacherOrAdmin =
+      requestingUserRole === UserRole.ADMIN ||
+      sae.createdById === requestingUserId ||
+      sae.invitations.some((inv) => inv.userId === requestingUserId);
 
     const submissions = await this.prisma.studentSubmission.findMany({
-      where: { saeId },
+      where: {
+        saeId,
+        OR: isTeacherOrAdmin
+          ? undefined
+          : [{ isPublic: true }, { studentId: requestingUserId || 'NONE' }],
+      },
       include: {
         student: { select: { firstname: true, lastname: true } },
         grades: { include: { category: { select: { name: true } } } },
@@ -281,13 +426,18 @@ export class GradesService {
         value: g.value,
       }));
 
-      const average = mappedGrades.length > 0
-        ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) / mappedGrades.length
-        : 0;
+      const average =
+        mappedGrades.length > 0
+          ? mappedGrades.reduce((acc, curr) => acc + curr.value, 0) /
+            mappedGrades.length
+          : 0;
 
       return {
         submissionId: s.id,
-        studentName: { firstname: s.student.firstname, lastname: s.student.lastname },
+        studentName: {
+          firstname: s.student.firstname,
+          lastname: s.student.lastname,
+        },
         grades: mappedGrades,
         average: parseFloat(average.toFixed(2)),
       };
@@ -300,10 +450,12 @@ export class GradesService {
     requestingUserId: string,
   ): void {
     const isOwner = createdById === requestingUserId;
-    const isInvited = invitations.some((inv) => inv.userId === requestingUserId);
+    const isInvited = invitations.some(
+      (inv) => inv.userId === requestingUserId,
+    );
 
     if (!isOwner && !isInvited) {
-      throw new ForbiddenException("Droit de gestion des notes refusé");
+      throw new ForbiddenException('Droit de gestion des notes refusé');
     }
   }
 }
