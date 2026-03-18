@@ -27,7 +27,6 @@ import { SaeFiltersDto } from './dto/sae-filters.dto';
 import {
   SaeArchiveResponse,
   SaeInvitationResponse,
-  SaeListResponse,
   SaeResponse,
 } from './types/sae.types';
 
@@ -112,7 +111,7 @@ export class SaesController {
     @CurrentUser() user: JwtPayload,
   ): Promise<{ success: boolean; message: string }> {
     await this.saesService.remove(id, user);
-    return { success: true, message: 'SAE supprimée avec succès' };
+    return { success: true, message: 'SAE supprimée avec succès.' };
   }
 
   @Post(':id/invitations')
@@ -147,6 +146,6 @@ export class SaesController {
     @CurrentUser() user: JwtPayload,
   ): Promise<{ success: boolean; message: string }> {
     await this.saesService.removeInvitation(id, invitationId, user);
-    return { success: true, message: 'Invitation supprimée avec succès' };
+    return { success: true, message: 'Invitation supprimée avec succès.' };
   }
 }

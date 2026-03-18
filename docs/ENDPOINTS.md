@@ -415,3 +415,31 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : `/api/grades/me`
 - **Rôle** : STUDENT uniquement
 - **Description** : Retourne la liste de tous les rendus de l'étudiant avec leurs notes respectives pour toutes les SAE, ainsi que sa moyenne générale globale.
+
+---
+
+## Module Utilisateurs
+
+### 39. Liste des Étudiants en Attente de Validation
+
+- **Méthode** : GET
+- **URL** : /api/users/pending-validation
+- **Rôle** : TEACHER, ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Retourne la liste des étudiants dont le profil est en attente de validation après leur onboarding.
+
+### 40. Valider un Profil Étudiant
+
+- **Méthode** : POST
+- **URL** : /api/users/:studentId/validate
+- **Rôle** : TEACHER, ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Valide le profil d'un étudiant en attente. Le `studentId` est l'identifiant de l'utilisateur (UUID ou string).
+
+### 41. Dévalider un Profil Étudiant
+
+- **Méthode** : POST
+- **URL** : /api/users/:studentId/unvalidate
+- **Rôle** : TEACHER, ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Dévalide le profil d'un étudiant précédemment validé. Le `studentId` est l'identifiant de l'utilisateur (UUID ou string).

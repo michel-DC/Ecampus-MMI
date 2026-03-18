@@ -90,6 +90,7 @@ model StudentProfile {
   userId      String @unique
   promotionId String
   groupId     String
+  isValidated Boolean @default(false)
 
   user      user      @relation(fields: [userId], references: [id], onDelete: Cascade)
   promotion Promotion @relation(fields: [promotionId], references: [id])
