@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserFiltersDto } from './dto/user-filters.dto';
@@ -82,7 +83,7 @@ export class UsersService {
 
     if (!response || !response.user) {
       throw new InternalServerErrorException(
-        "Échec de la création du compte de l'enseignant",
+        "Échec de la création du compte de l'enseignant via l'API externe.",
       );
     }
 
@@ -97,9 +98,10 @@ export class UsersService {
       await this.prisma.user.delete({
         where: { id: response.user.id },
       });
-      throw error;
+      throw new InternalServerErrorException(
+        "Échec de l'envoi des identifiants par email. Le compte enseignant n'a pas été créé.",
+      );
     }
-
 
     return {
       id: response.user.id,
@@ -117,5 +119,99 @@ export class UsersService {
     return Array.from({ length: 12 }, () =>
       chars.charAt(Math.floor(Math.random() * chars.length)),
     ).join('');
+  }
+
+  async getPendingStudents(): Promise<UserSearchResponse[]> {
+    const users = await this.prisma.user.findMany({
+      where: {
+        role: UserRole.STUDENT,
+        studentProfile: {
+          isValidated: false,
+        },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstname: true,
+        lastname: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+        studentProfile: {
+          select: {
+            isValidated: true,
+            promotion: { select: { label: true, academicYear: true } },
+            group: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { lastname: 'asc' },
+    });
+
+    return users.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: { firstname: user.firstname, lastname: user.lastname },
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      promotion: user.studentProfile?.promotion?.label,
+      academicYear: user.studentProfile?.promotion?.academicYear,
+      groupName: user.studentProfile?.group?.name,
+      isProfileValidated: user.studentProfile?.isValidated,
+    }));
+  }
+
+  async validateStudentProfile(studentId: string): Promise<void> {
+    const studentProfile = await this.prisma.studentProfile.findUnique({
+      where: { userId: studentId },
+      include: { user: true },
+    });
+
+    if (!studentProfile) {
+      throw new NotFoundException(
+        'Profil étudiant non trouvé pour cet utilisateur.',
+      );
+    }
+
+    if (studentProfile.user.role !== UserRole.STUDENT) {
+      throw new ConflictException("Cet utilisateur n'est pas un étudiant.");
+    }
+
+    if (studentProfile.isValidated) {
+      throw new ConflictException('Le profil étudiant est déjà validé.');
+    }
+
+    await this.prisma.studentProfile.update({
+      where: { userId: studentId },
+      data: { isValidated: true },
+    });
+  }
+
+  async unvalidateStudentProfile(studentId: string): Promise<void> {
+    const studentProfile = await this.prisma.studentProfile.findUnique({
+      where: { userId: studentId },
+      include: { user: true },
+    });
+
+    if (!studentProfile) {
+      throw new NotFoundException(
+        'Profil étudiant non trouvé pour cet utilisateur.',
+      );
+    }
+
+    if (studentProfile.user.role !== UserRole.STUDENT) {
+      throw new ConflictException("Cet utilisateur n'est pas un étudiant.");
+    }
+
+    if (!studentProfile.isValidated) {
+      throw new ConflictException("Le profil étudiant n'est pas validé.");
+    }
+
+    await this.prisma.studentProfile.update({
+      where: { userId: studentId },
+      data: { isValidated: false },
+    });
   }
 }

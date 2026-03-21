@@ -82,7 +82,10 @@ export class ResourcesController {
   }
 
   @Get(['semesters', 'semester'])
-  async getSemesters(): Promise<{ success: boolean; data: SemesterResponse[] }> {
+  async getSemesters(): Promise<{
+    success: boolean;
+    data: SemesterResponse[];
+  }> {
     const data = await this.resourcesService.findAllSemesters();
     return { success: true, data };
   }

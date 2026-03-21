@@ -33,7 +33,10 @@ export class DocumentsController {
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
   ): Promise<{ success: boolean; data: SaeDocumentResponse[] }> {
-    const data = await this.documentsService.findSaeDocuments(saeId, user?.role);
+    const data = await this.documentsService.findSaeDocuments(
+      saeId,
+      user?.role,
+    );
     return { success: true, data };
   }
 

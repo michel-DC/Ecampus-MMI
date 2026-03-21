@@ -16,10 +16,10 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export interface UserResponse {
-  id: string;
   email: string;
   name: UserName;
   role: UserRole;
   isActive: boolean;
   createdAt: Date;
+  isProfileValidated?: boolean;
 }

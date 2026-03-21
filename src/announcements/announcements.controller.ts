@@ -35,7 +35,11 @@ export class AnnouncementsController {
   async findAll(
     @Param('saeId') saeId: string,
     @CurrentUser() user?: JwtPayload,
-  ): Promise<{ success: boolean; data: AnnouncementResponse[]; total: number }> {
+  ): Promise<{
+    success: boolean;
+    data: AnnouncementResponse[];
+    total: number;
+  }> {
     const result = await this.announcementsService.findAllBySae(
       saeId,
       user?.role,

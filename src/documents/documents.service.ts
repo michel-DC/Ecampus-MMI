@@ -278,10 +278,7 @@ export class DocumentsService {
         saeId,
         OR: canSeePrivateSubmissions
           ? undefined
-          : [
-              { isPublic: true },
-              { studentId: requestingUserId || 'NONE' },
-            ],
+          : [{ isPublic: true }, { studentId: requestingUserId || 'NONE' }],
       },
       include: {
         student: { select: { firstname: true, lastname: true } },

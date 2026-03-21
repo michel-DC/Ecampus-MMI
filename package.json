@@ -34,7 +34,8 @@
     "reflect-metadata": "^0.2.2",
     "resend": "^6.9.3",
     "rxjs": "^7.8.1",
-    "uploadthing": "^7.7.4"
+    "uploadthing": "^7.7.4",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

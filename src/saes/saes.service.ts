@@ -51,8 +51,7 @@ export class SaesService {
         semester: {
           promotionId: isStudent ? studentPromotionId : filters.promotionId,
           promotion: {
-            academicYear:
-              isStudent || filters.promotionId ? undefined : null,
+            academicYear: isStudent || filters.promotionId ? undefined : null,
             students: filters.groupId
               ? { some: { groupId: filters.groupId } }
               : undefined,
