@@ -1,5 +1,7 @@
 # Documentation des Endpoints API — Ecampus
 
+**URL du backend :** `ecampus-mmi.onrender.com`
+
 Ce document réunit l'ensemble des points d'entrée de l'API avec les permissions associées.
 
 ---
@@ -360,11 +362,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
 - **Sécurité** : AuthGuard, RolesGuard
 - **Body** :
+
 ```json
 {
   "name": "Nom de la catégorie"
 }
 ```
+
 - **Note** : Création possible uniquement une fois la SAE terminée (`now > dueDate`).
 
 ### 34. Exporter le Tableau de Notation (Excel)
@@ -391,6 +395,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : `/api/submissions/:submissionId/grades`
 - **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
 - **Body** :
+
 ```json
 {
   "grades": [
@@ -399,6 +404,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   ]
 }
 ```
+
 - **Note** : Saisie possible uniquement après la `dueDate`. Les notes doivent être entre 0 et 20.
 
 ### 37. Consulter les Notes d'un Rendu
@@ -414,7 +420,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Méthode** : GET
 - **URL** : `/api/grades/me`
 - **Rôle** : STUDENT uniquement
-- **Description** : Retourne la liste de tous les rendus de l'étudiant avec leurs notes respectives pour toutes les SAE, ainsi que sa moyenne générale globale.
+- **Description** : Retourne la liste de tous les rendus de l'étudiant with leurs notes respectives pour toutes les SAE, ainsi que sa moyenne générale globale.
 
 ---
 
@@ -443,3 +449,83 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : TEACHER, ADMIN
 - **Sécurité** : AuthGuard, RolesGuard
 - **Description** : Dévalide le profil d'un étudiant précédemment validé. Le `studentId` est l'identifiant de l'utilisateur (UUID ou string).
+
+---
+
+## Module Paliers (Milestones)
+
+### 42. Liste des Paliers d'une SAE
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/milestones
+- **Rôle** : PUBLIC (Si SAE publiée)
+- **Description** : Récupère la liste ordonnée des paliers (milestones) pour une SAE donnée.
+
+### 43. Créer un Palier
+
+- **Méthode** : POST
+- **URL** : /api/saes/:saeId/milestones
+- **Rôle** : TEACHER (Propriétaire), ADMIN
+- **Body** :
+
+```json
+{
+  "title": "Titre du palier",
+  "description": "Description (optionnelle)",
+  "position": 1
+}
+```
+
+### 44. Modifier un Palier
+
+- **Méthode** : PATCH
+- **URL** : /api/saes/:saeId/milestones/:milestoneId
+- **Rôle** : TEACHER (Propriétaire), ADMIN
+
+### 45. Supprimer un Palier
+
+- **Méthode** : DELETE
+- **URL** : /api/saes/:saeId/milestones/:milestoneId
+- **Rôle** : TEACHER (Propriétaire), ADMIN
+
+### 46. Mettre à jour sa progression (Étudiant)
+
+- **Méthode** : POST
+- **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
+- **Rôle** : STUDENT de la promotion concernée
+- **Sécurité** : AuthGuard, ProfileValidatedGuard
+- **Body** :
+
+```json
+{
+  "isReached": true,
+  "message": "Commentaire optionnel"
+}
+```
+
+### 47. Voir la progression d'un étudiant sur un palier
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
+- **Rôle** : TEACHER, ADMIN, STUDENT (propre progression uniquement)
+
+### 48. Tableau de bord de progression d'une SAE (Enseignants)
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/milestones/progress
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Description** : Retourne tous les paliers avec la liste des progressions de tous les étudiants.
+
+### 49. Ma progression sur les paliers d'une SAE
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/milestones/progress/me
+- **Rôle** : STUDENT concerné
+- **Sécurité** : AuthGuard, ProfileValidatedGuard
+
+### 50. Statistiques de progression des Paliers
+
+- **Méthode** : GET
+- **URL** : /api/saes/:saeId/milestones/stats
+- **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
+- **Description** : Retourne des statistiques agrégées sur la validation des paliers (nombre total d'étudiants, nombre de paliers par étudiant, moyenne globale, taux de complétion).

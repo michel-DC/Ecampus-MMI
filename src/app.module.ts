@@ -11,6 +11,7 @@ import { DocumentsModule } from './documents/documents.module';
 import { UsersModule } from './users/users.module';
 import { MailModule } from './mail/mail.module';
 import { GradesModule } from './grades/grades.module';
+import { MilestonesModule } from './milestones/milestones.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { GradesModule } from './grades/grades.module';
     DocumentsModule,
     UsersModule,
     GradesModule,
+    MilestonesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

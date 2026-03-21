@@ -166,7 +166,7 @@ export class UsersService {
   async validateStudentProfile(studentId: string): Promise<void> {
     const studentProfile = await this.prisma.studentProfile.findUnique({
       where: { userId: studentId },
-      include: { user: true }, // Inclure l'utilisateur pour vérifier le rôle
+      include: { user: true },
     });
 
     if (!studentProfile) {

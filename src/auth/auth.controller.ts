@@ -89,9 +89,7 @@ export class AuthController {
   @Post('sign-up/teacher')
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-  async signUpTeacher(
-    @Body() dto: CreateTeacherDto,
-  ): Promise<{
+  async signUpTeacher(@Body() dto: CreateTeacherDto): Promise<{
     success: boolean;
     data: CreatedTeacherResponse;
     message?: string;

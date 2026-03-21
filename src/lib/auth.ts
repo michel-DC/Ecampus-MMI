@@ -1,7 +1,7 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { PrismaClient } from '@prisma/client';
-import { admin } from "better-auth/plugins";
+import { admin } from 'better-auth/plugins';
 
 const prisma = new PrismaClient();
 
@@ -33,7 +33,9 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
-        before: async (user: Record<string, unknown>): Promise<{ data: Record<string, unknown> }> => {
+        before: async (
+          user: Record<string, unknown>,
+        ): Promise<{ data: Record<string, unknown> }> => {
           return {
             data: {
               ...user,

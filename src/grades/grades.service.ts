@@ -167,13 +167,12 @@ export class GradesService {
       );
     }
 
-    const categoryIdsFromExcel = jsonData[0].slice(3);
+    const categoryIdsFromExcel = jsonData[0].slice(3) as string[];
     const validCategoryIds = sae.gradeCategories.map((c) => c.id);
 
     const gradeDataRows = jsonData.slice(2);
     const operations: Prisma.PrismaPromise<any>[] = [];
 
-    // Récupérer tous les IDs de rendus existants pour cette SAE pour validation
     const existingSubmissions = await this.prisma.studentSubmission.findMany({
       where: { saeId },
       select: { id: true },
@@ -181,7 +180,7 @@ export class GradesService {
     const validSubmissionIds = new Set(existingSubmissions.map((s) => s.id));
 
     for (const row of gradeDataRows) {
-      const submissionId = row[0];
+      const submissionId = row[0] as string;
       if (!submissionId || !validSubmissionIds.has(submissionId)) continue;
 
       categoryIdsFromExcel.forEach((categoryId, index) => {
@@ -190,7 +189,7 @@ export class GradesService {
         const rawValue = row[index + 3];
         if (rawValue === undefined || rawValue === '') return;
 
-        const value = parseFloat(rawValue);
+        const value = parseFloat(rawValue as string);
         if (isNaN(value) || value < 0 || value > 20) {
           throw new BadRequestException(
             `Note invalide : ${rawValue}. Doit être entre 0 et 20.`,
@@ -248,7 +247,6 @@ export class GradesService {
       );
     }
 
-    // Valider que les catégories appartiennent bien à la SAE
     const validCategories = await this.prisma.gradeCategory.findMany({
       where: { saeId: submission.saeId },
       select: { id: true },
@@ -275,7 +273,7 @@ export class GradesService {
       submissionId,
       requestingUserId,
       UserRole.TEACHER,
-    ); // Rôle forcé ici car on vient de noter
+    );
   }
 
   async findSubmissionGrades(
