@@ -8,6 +8,7 @@ async function bootstrap(): Promise<void> {
   app.enableCors({
     origin: 'http://localhost:5173',
     credentials: true, 
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
   app.useGlobalPipes(
