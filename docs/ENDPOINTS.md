@@ -224,11 +224,35 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+### 9. Mise à jour de la Photo de Profil
+
+- **Méthode** : POST
+- **URL** : /api/auth/profile-image
+- **Rôle** : CONNECTÉ (Tous rôles)
+- **Sécurité** : AuthGuard
+- **Body** :
+
+```json
+{
+  "imageUrl": "URL_OBTENUE_VIA_UPLOAD"
+}
+```
+
+- **Description** : Met à jour la photo de profil de l'utilisateur connecté en base de données et supprime l'ancienne image si elle était stockée sur le serveur distant (utfs.io).
+- **Réponse** (200 OK) :
+```json
+{
+  "success": true,
+  "data": null,
+  "message": "Photo de profil mise à jour avec succès."
+}
+```
+
 ---
 
 ## Ressources Pédagogiques
 
-### 9. Liste des Promotions
+### 10. Liste des Promotions
 
 - **Méthode** : GET
 - **URL** : /api/resources/promotions
@@ -251,7 +275,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 10. Liste des Groupes
+### 11. Liste des Groupes
 
 - **Méthode** : GET
 - **URL** : /api/resources/groups
@@ -271,7 +295,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 11. Liste des Semestres
+### 12. Liste des Semestres
 
 - **Méthode** : GET
 - **URL** : /api/resources/semesters
@@ -293,7 +317,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 12. Liste des Thématiques
+### 13. Liste des Thématiques
 
 - **Méthode** : GET
 - **URL** : /api/resources/thematics
@@ -318,7 +342,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 13. Liste des Bannières
+### 14. Liste des Bannières
 
 - **Méthode** : GET
 - **URL** : /api/resources/banners
@@ -338,7 +362,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 14. Upload de Fichier (SAE)
+### 15. Upload de Fichier (SAE)
 
 - **Méthode** : POST
 - **URL** : /api/resources/upload
@@ -366,7 +390,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 15. Upload d'Image de Profil
+### 16. Upload d'Image de Profil
 
 - **Méthode** : POST
 - **URL** : /api/resources/upload-image
@@ -374,7 +398,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Sécurité** : AuthGuard
 - **Body (formData)** :
   - file : Le fichier image (PNG, JPG, JPEG, WEBP).
-- **Description** : Upload une image de profil et retourne l'URL à utiliser ensuite dans l'onboarding ou la mise à jour de profil.
+- **Description** : Upload une image de profil vers le stockage distant et retourne l'URL générée. Cette URL doit ensuite être utilisée avec l'endpoint de mise à jour du profil (Endpoint 9).
 - **Réponse** (201 Created) :
 ```json
 {
@@ -389,7 +413,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module SAE (Situations d'Apprentissage et d'Évaluation)
 
-### 16. Liste des SAE Actuelles
+### 17. Liste des SAE Actuelles
 
 - **Méthode** : GET
 - **URL** : /api/saes
@@ -434,7 +458,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 17. Galerie des Archives (Hall of Fame)
+### 18. Galerie des Archives (Hall of Fame)
 
 - **Méthode** : GET
 - **URL** : /api/saes/archives
@@ -461,7 +485,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 18. Détail d'une SAE
+### 19. Détail d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:id
@@ -500,7 +524,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 19. Créer une SAE
+### 20. Créer une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes
@@ -548,7 +572,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 20. Modifier une SAE
+### 21. Modifier une SAE
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:id
@@ -567,7 +591,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 21. Publier une SAE
+### 22. Publier une SAE
 
 - **Méthode** : POST
 - **URL** : /api/saes/:id/publish
@@ -585,7 +609,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 22. Supprimer une SAE
+### 23. Supprimer une SAE
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:id
@@ -598,7 +622,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 23. Gestion des Invitations
+### 24. Gestion des Invitations
 
 - POST /api/saes/:id/invitations : Inviter un collègue (Rôle: TEACHER Propriétaire, ADMIN).
 - GET /api/saes/:id/invitations : Liste des invités (Rôle: TEACHER Propriétaire, ADMIN).
@@ -624,7 +648,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Annonces
 
-### 24. Liste des Annonces
+### 25. Liste des Annonces
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements
@@ -647,7 +671,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 25. Détail d'une Annonce
+### 26. Détail d'une Annonce
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/announcements/:id
@@ -667,7 +691,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 26. Gérer les Annonces
+### 27. Gérer les Annonces
 
 - POST /api/saes/:saeId/announcements : Créer (Rôle: TEACHER Propriétaire/Invité).
 - PATCH /api/saes/:saeId/announcements/:id : Modifier (Rôle: TEACHER Propriétaire/Invité).
@@ -689,7 +713,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Documents et Rendus
 
-### 27. Documents SAE (Enseignants)
+### 28. Documents SAE (Enseignants)
 
 - GET /api/saes/:saeId/documents : Consulter (Rôle: PUBLIC si SAE publiée).
 - POST /api/saes/:saeId/documents : Ajouter (Rôle: TEACHER Propriétaire/Invité).
@@ -712,7 +736,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 28. Rendus (Étudiants)
+### 29. Rendus (Étudiants)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/submission
@@ -751,7 +775,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 29. Consulter son propre rendu
+### 30. Consulter son propre rendu
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submission/me
@@ -776,7 +800,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 30. Liste des Rendus (Galerie)
+### 31. Liste des Rendus (Galerie)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submissions
@@ -812,7 +836,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Notation (Grades)
 
-### 31. Liste des Catégories de Notes
+### 32. Liste des Catégories de Notes
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grade-categories`
@@ -829,7 +853,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 32. Consulter Toutes les Notes d'une SAE (Tableau de bord)
+### 33. Consulter Toutes les Notes d'une SAE (Tableau de bord)
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grades`
@@ -854,7 +878,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 33. Gérer les Catégories de Notes
+### 34. Gérer les Catégories de Notes
 
 - **Méthode** : POST
 - **URL** : `/api/saes/:saeId/grade-categories`
@@ -877,7 +901,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 34. Exporter le Tableau de Notation (Excel)
+### 35. Exporter le Tableau de Notation (Excel)
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grades/export`
@@ -886,7 +910,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Note** : Export possible uniquement après la `dueDate`.
 - **Réponse** (200 OK) : (Fichier binaire .xlsx)
 
-### 35. Importer les Notes (Excel)
+### 36. Importer les Notes (Excel)
 
 - **Méthode** : POST
 - **URL** : `/api/saes/:saeId/grades/import`
@@ -904,7 +928,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 36. Saisir/Modifier les Notes d'un Rendu (Manuel)
+### 37. Saisir/Modifier les Notes d'un Rendu (Manuel)
 
 - **Méthode** : POST
 - **URL** : `/api/submissions/:submissionId/grades`
@@ -937,7 +961,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 37. Consulter les Notes d'un Rendu
+### 38. Consulter les Notes d'un Rendu
 
 - **Méthode** : GET
 - **URL** : `/api/submissions/:submissionId/grades`
@@ -960,7 +984,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 38. Synthèse de mes Notes (Étudiant)
+### 39. Synthèse de mes Notes (Étudiant)
 
 - **Méthode** : GET
 - **URL** : `/api/grades/me`
@@ -991,7 +1015,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Utilisateurs
 
-### 39. Liste des Étudiants en Attente de Validation
+### 40. Liste des Étudiants en Attente de Validation
 
 - **Méthode** : GET
 - **URL** : /api/users/pending-validation
@@ -1016,7 +1040,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 40. Valider un Profil Étudiant
+### 41. Valider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/validate
@@ -1032,7 +1056,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 41. Dévalider un Profil Étudiant
+### 42. Dévalider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/unvalidate
@@ -1052,7 +1076,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Paliers (Milestones)
 
-### 42. Liste des Paliers d'une SAE
+### 43. Liste des Paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones
@@ -1076,7 +1100,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 43. Créer un Palier
+### 44. Créer un Palier
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones
@@ -1106,7 +1130,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 44. Modifier un Palier
+### 45. Modifier un Palier
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1123,7 +1147,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 45. Supprimer un Palier
+### 46. Supprimer un Palier
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1136,7 +1160,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 46. Mettre à jour sa progression (Étudiant)
+### 47. Mettre à jour sa progression (Étudiant)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
@@ -1167,7 +1191,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 47. Voir la progression d'un étudiant sur un palier
+### 48. Voir la progression d'un étudiant sur un palier
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
@@ -1187,7 +1211,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 48. Tableau de bord de progression d'une SAE (Enseignants)
+### 49. Tableau de bord de progression d'une SAE (Enseignants)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress
@@ -1216,7 +1240,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 49. Ma progression sur les paliers d'une SAE
+### 50. Ma progression sur les paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress/me
@@ -1237,7 +1261,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 50. Statistiques de progression des Paliers
+### 51. Statistiques de progression des Paliers
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/stats

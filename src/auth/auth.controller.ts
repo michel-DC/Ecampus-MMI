@@ -14,6 +14,7 @@ import { auth } from '../lib/auth';
 import { AuthService } from './auth.service';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileImageDto } from './dto/update-profile-image.dto';
 import { CreateTeacherDto } from '../users/dto/create-teacher.dto';
 import { CreatedTeacherResponse } from '../users/types/user.types';
 import { UsersService } from '../users/users.service';
@@ -83,6 +84,20 @@ export class AuthController {
       success: true,
       data: null,
       message: 'Mot de passe modifié avec succès.',
+    };
+  }
+
+  @Post('profile-image')
+  @UseGuards(AuthGuard)
+  async updateProfileImage(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateProfileImageDto,
+  ): Promise<{ success: boolean; data: null; message: string }> {
+    await this.authService.updateProfileImage(user.sub, dto);
+    return {
+      success: true,
+      data: null,
+      message: 'Photo de profil mise à jour avec succès.',
     };
   }
 

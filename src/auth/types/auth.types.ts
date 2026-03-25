@@ -21,5 +21,6 @@ export interface UserResponse {
   role: UserRole;
   isActive: boolean;
   createdAt: Date;
+  imageUrl?: string | null;
   isProfileValidated?: boolean;
 }

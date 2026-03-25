@@ -7,9 +7,13 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OnboardingDto } from './dto/onboarding.dto';
 import { UserResponse } from './types/auth.types';
 import { UserRole } from '@prisma/client';
+import { UpdateProfileImageDto } from './dto/update-profile-image.dto';
+import { UTApi } from 'uploadthing/server';
 
 @Injectable()
 export class AuthService {
+  private readonly utapi = new UTApi();
+
   constructor(private readonly prisma: PrismaService) {}
 
   async findUserById(userId: string): Promise<UserResponse> {
@@ -20,6 +24,7 @@ export class AuthService {
         firstname: true,
         lastname: true,
         role: true,
+        image: true,
         isActive: true,
         createdAt: true,
         studentProfile: {
@@ -38,6 +43,7 @@ export class AuthService {
       email: user.email,
       name: { firstname: user.firstname, lastname: user.lastname },
       role: user.role,
+      imageUrl: user.image,
       isActive: user.isActive,
       createdAt: user.createdAt,
     };
@@ -96,6 +102,42 @@ export class AuthService {
     }
 
     await this.prisma.$transaction(operations);
+  }
+
+  async updateProfileImage(
+    userId: string,
+    dto: UpdateProfileImageDto,
+  ): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { image: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    const oldImageUrl = user.image;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { image: dto.imageUrl },
+    });
+
+    if (
+      oldImageUrl &&
+      oldImageUrl !== dto.imageUrl &&
+      oldImageUrl.includes('utfs.io')
+    ) {
+      const key = oldImageUrl.split('/').pop();
+      if (key) {
+        try {
+          await this.utapi.deleteFiles(key);
+        } catch (error) {
+          // On ignore si la suppression échoue
+        }
+      }
+    }
   }
 
   async createTeacherProfileIfMissing(userId: string): Promise<void> {
