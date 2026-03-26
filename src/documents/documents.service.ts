@@ -336,4 +336,121 @@ export class DocumentsService {
       );
     }
   }
+
+  async updateSubmissionVisibility(
+    saeId: string,
+    studentId: string,
+    isPublic: boolean,
+  ): Promise<StudentSubmissionResponse> {
+    const submission = await this.prisma.studentSubmission.findUnique({
+      where: { saeId_studentId: { saeId, studentId } },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Aucun rendu trouvé pour cette SAE');
+    }
+
+    if (submission.studentId !== studentId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que votre propre rendu',
+      );
+    }
+
+    const updatedSubmission = await this.prisma.studentSubmission.update({
+      where: { id: submission.id },
+      data: { isPublic },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
+    });
+
+    return {
+      id: updatedSubmission.id,
+      saeId: updatedSubmission.saeId,
+      name: {
+        firstname: updatedSubmission.student.firstname,
+        lastname: updatedSubmission.student.lastname,
+      },
+      url: updatedSubmission.url,
+      fileName: updatedSubmission.name,
+      mimeType: updatedSubmission.mimeType,
+      description: updatedSubmission.description,
+      imageUrl: updatedSubmission.imageUrl,
+      isPublic: updatedSubmission.isPublic,
+      isLate: updatedSubmission.isLate,
+      lateTime: updatedSubmission.lateTime,
+      submittedAt: updatedSubmission.submittedAt,
+      updatedAt: updatedSubmission.updatedAt,
+    };
+  }
+
+  async updateAllSaeSubmissionsVisibility(
+    saeId: string,
+    requestingUserId: string,
+    requestingUserRole: UserRole,
+    isPublic: boolean,
+  ): Promise<{ updatedCount: number }> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+      select: {
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
+    });
+
+    if (!sae) {
+      throw new NotFoundException('SAE non trouvée');
+    }
+
+    const isAdmin = requestingUserRole === UserRole.ADMIN;
+    if (!isAdmin) {
+      this.assertCanWriteOnSae(
+        sae.createdById,
+        sae.invitations,
+        requestingUserId,
+      );
+    }
+
+    const result = await this.prisma.studentSubmission.updateMany({
+      where: {
+        saeId,
+        isPublic: { not: isPublic },
+      },
+      data: { isPublic },
+    });
+
+    return { updatedCount: result.count };
+  }
+
+  async updateAllPromotionSubmissionsVisibility(
+    promotionId: string,
+    isPublic: boolean,
+  ): Promise<{ updatedCount: number }> {
+    const promotion = await this.prisma.promotion.findUnique({
+      where: { id: promotionId },
+      select: { id: true },
+    });
+
+    if (!promotion) {
+      throw new NotFoundException('Promotion non trouvée');
+    }
+
+    const result = await this.prisma.studentSubmission.updateMany({
+      where: {
+        isPublic: { not: isPublic },
+        sae: {
+          deletedAt: null,
+          semester: {
+            promotionId,
+          },
+        },
+      },
+      data: { isPublic },
+    });
+
+    return { updatedCount: result.count };
+  }
 }

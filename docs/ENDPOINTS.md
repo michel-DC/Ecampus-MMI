@@ -834,7 +834,97 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 31. Liste des Rendus (Galerie)
+### 31. Modifier la Visibilité de son Rendu
+
+- **Méthode** : PATCH
+- **URL** : /api/saes/:saeId/submission/visibility
+- **Rôle** : STUDENT (propriétaire du rendu uniquement)
+- **Sécurité** : AuthGuard, RolesGuard, OnboardingGuard
+- **Body** :
+
+```json
+{
+  "isPublic": true
+}
+```
+
+- **Description** : Permet à un étudiant de rendre son devoir visible ou non, même après publication, uniquement pour son propre rendu.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": "sub_uuid_123",
+    "saeId": "sae_uuid_1",
+    "name": { "firstname": "Jean", "lastname": "Dupont" },
+    "url": "https://utfs.io/f/mon_rendu.pdf",
+    "fileName": "projet_final.pdf",
+    "mimeType": "application/pdf",
+    "description": "Voici mon projet final pour la SAE.",
+    "imageUrl": "https://utfs.io/f/preview.png",
+    "isPublic": false,
+    "isLate": false,
+    "lateTime": null,
+    "submittedAt": "2024-06-15T14:30:00.000Z",
+    "updatedAt": "2024-06-15T15:45:00.000Z"
+  }
+}
+```
+
+### 32. Modifier la Visibilité de Tous les Rendus d'une SAE
+
+- **Méthode** : PATCH
+- **URL** : /api/saes/:saeId/submissions/visibility
+- **Rôle** : TEACHER (propriétaire/invité), ADMIN
+- **Sécurité** : AuthGuard, RolesGuard, OnboardingGuard
+- **Body** :
+
+```json
+{
+  "isPublic": false
+}
+```
+
+- **Description** : Modifie la visibilité de tous les rendus d'une SAE en une seule action. Un professeur ne peut le faire que pour une SAE qu'il possède ou sur laquelle il est invité.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": {
+    "updatedCount": 24
+  }
+}
+```
+
+### 33. Modifier la Visibilité de Tous les Rendus d'une Promotion
+
+- **Méthode** : PATCH
+- **URL** : /api/promotions/:promotionId/submissions/visibility
+- **Rôle** : ADMIN uniquement
+- **Sécurité** : AuthGuard, RolesGuard
+- **Body** :
+
+```json
+{
+  "isPublic": false
+}
+```
+
+- **Description** : Modifie la visibilité de tous les rendus de toutes les SAE d'une promotion entière.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": {
+    "updatedCount": 142
+  }
+}
+```
+
+### 34. Liste des Rendus (Galerie)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/submissions
@@ -871,7 +961,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Notation (Grades)
 
-### 32. Liste des Catégories de Notes
+### 35. Liste des Catégories de Notes
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grade-categories`
@@ -889,7 +979,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 33. Consulter Toutes les Notes d'une SAE (Tableau de bord)
+### 36. Consulter Toutes les Notes d'une SAE (Tableau de bord)
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grades`
@@ -925,7 +1015,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 34. Gérer les Catégories de Notes
+### 37. Gérer les Catégories de Notes
 
 - **Méthode** : POST
 - **URL** : `/api/saes/:saeId/grade-categories`
@@ -949,7 +1039,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 35. Exporter le Tableau de Notation (Excel)
+### 38. Exporter le Tableau de Notation (Excel)
 
 - **Méthode** : GET
 - **URL** : `/api/saes/:saeId/grades/export`
@@ -958,7 +1048,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Note** : Export possible uniquement après la `dueDate`.
 - **Réponse** (200 OK) : (Fichier binaire .xlsx)
 
-### 36. Importer les Notes (Excel)
+### 39. Importer les Notes (Excel)
 
 - **Méthode** : POST
 - **URL** : `/api/saes/:saeId/grades/import`
@@ -977,7 +1067,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 37. Saisir/Modifier les Notes d'un Rendu (Manuel)
+### 40. Saisir/Modifier les Notes d'un Rendu (Manuel)
 
 - **Méthode** : POST
 - **URL** : `/api/submissions/:submissionId/grades`
@@ -1021,7 +1111,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 38. Consulter les Notes d'un Rendu
+### 41. Consulter les Notes d'un Rendu
 
 - **Méthode** : GET
 - **URL** : `/api/submissions/:submissionId/grades`
@@ -1055,7 +1145,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 39. Synthèse de mes Notes (Étudiant)
+### 42. Synthèse de mes Notes (Étudiant)
 
 - **Méthode** : GET
 - **URL** : `/api/grades/me`
@@ -1092,7 +1182,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Utilisateurs
 
-### 40. Liste des Étudiants en Attente de Validation
+### 43. Liste des Étudiants en Attente de Validation
 
 - **Méthode** : GET
 - **URL** : /api/users/pending-validation
@@ -1118,7 +1208,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 41. Valider un Profil Étudiant
+### 44. Valider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/validate
@@ -1135,7 +1225,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 42. Dévalider un Profil Étudiant
+### 45. Dévalider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/unvalidate
@@ -1152,7 +1242,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 43. Modifier le Profil Étudiant
+### 46. Modifier le Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/update
@@ -1188,7 +1278,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Paliers (Milestones)
 
-### 44. Liste des Paliers d'une SAE
+### 47. Liste des Paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones
@@ -1213,7 +1303,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 45. Créer un Palier
+### 48. Créer un Palier
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones
@@ -1245,7 +1335,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 46. Modifier un Palier
+### 49. Modifier un Palier
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1263,7 +1353,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 47. Supprimer un Palier
+### 50. Supprimer un Palier
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1277,7 +1367,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 48. Mettre à jour sa progression (Étudiant)
+### 51. Mettre à jour sa progression (Étudiant)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
@@ -1310,7 +1400,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 49. Voir la progression d'un étudiant sur un palier
+### 52. Voir la progression d'un étudiant sur un palier
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
@@ -1331,7 +1421,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 50. Tableau de bord de progression d'une SAE (Enseignants)
+### 53. Tableau de bord de progression d'une SAE (Enseignants)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress
@@ -1361,7 +1451,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 51. Ma progression sur les paliers d'une SAE
+### 54. Ma progression sur les paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress/me
@@ -1387,7 +1477,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 52. Statistiques de progression des Paliers
+### 55. Statistiques de progression des Paliers
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/stats
