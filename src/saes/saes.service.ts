@@ -6,8 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserRole } from '@prisma/client';
+import { TdGroup, UserRole } from '@prisma/client';
 import { JwtPayload } from '../auth/types/auth.types';
+import { deriveTdGroupFromGroupName } from '../lib/td-group';
 import { CreateSaeDto } from './dto/create-sae.dto';
 import { UpdateSaeDto } from './dto/update-sae.dto';
 import { CreateInvitationDto } from './dto/create-invitation.dto';
@@ -35,18 +36,45 @@ export class SaesService {
     const isStudent = requestingUserRole === UserRole.STUDENT;
 
     let studentPromotionId: string | undefined;
+    let studentTdGroup: TdGroup | undefined;
     if (isStudent && requestingUserId) {
       const profile = await this.prisma.studentProfile.findUnique({
         where: { userId: requestingUserId },
-        select: { promotionId: true },
+        select: {
+          promotionId: true,
+          group: { select: { name: true } },
+        },
       });
-      studentPromotionId = profile?.promotionId;
+
+      if (!profile) {
+        throw new ForbiddenException(
+          'Vous devez compléter votre onboarding pour accéder aux SAE',
+        );
+      }
+
+      studentPromotionId = profile.promotionId;
+      const resolvedTdGroup = deriveTdGroupFromGroupName(profile.group?.name);
+      if (!resolvedTdGroup) {
+        throw new ForbiddenException(
+          'Impossible de déterminer votre groupe TD à partir de votre groupe',
+        );
+      }
+      studentTdGroup = resolvedTdGroup;
+    }
+
+    if (isStudent && (!studentPromotionId || !studentTdGroup)) {
+      throw new ForbiddenException(
+        'Impossible de déterminer votre promotion ou votre groupe TD',
+      );
     }
 
     const saes = await this.prisma.sae.findMany({
       where: {
         deletedAt: null,
         semesterId: filters.semesterId,
+        AND: isStudent
+          ? [{ OR: [{ tdGroup: studentTdGroup! }, { tdGroup: null }] }]
+          : undefined,
         isPublished: isTeacherOrAdmin ? filters.isPublished : true,
         semester: {
           promotionId: isStudent ? studentPromotionId : filters.promotionId,
@@ -136,6 +164,7 @@ export class SaesService {
         description: sae.description,
         instructions: sae.instructions,
         semesterId: sae.semesterId,
+        tdGroup: sae.tdGroup,
         thematic: sae.thematic.label,
         startDate: sae.startDate,
         dueDate: sae.dueDate,
@@ -234,12 +263,30 @@ export class SaesService {
     const isStudent = requestingUserRole === UserRole.STUDENT;
 
     let studentPromotionId: string | undefined;
+    let studentTdGroup: TdGroup | undefined;
     if (isStudent && requestingUserId) {
       const profile = await this.prisma.studentProfile.findUnique({
         where: { userId: requestingUserId },
-        select: { promotionId: true },
+        select: {
+          promotionId: true,
+          group: { select: { name: true } },
+        },
       });
-      studentPromotionId = profile?.promotionId;
+
+      if (!profile) {
+        throw new ForbiddenException(
+          'Vous devez compléter votre onboarding pour accéder aux SAE',
+        );
+      }
+
+      studentPromotionId = profile.promotionId;
+      const resolvedTdGroup = deriveTdGroupFromGroupName(profile.group?.name);
+      if (!resolvedTdGroup) {
+        throw new ForbiddenException(
+          'Impossible de déterminer votre groupe TD à partir de votre groupe',
+        );
+      }
+      studentTdGroup = resolvedTdGroup;
     }
 
     const sae = await this.prisma.sae.findUnique({
@@ -271,6 +318,12 @@ export class SaesService {
       );
     }
 
+    if (isStudent && sae.tdGroup && sae.tdGroup !== studentTdGroup) {
+      throw new ForbiddenException(
+        "Cette SAE n'est pas destinée à votre groupe TD",
+      );
+    }
+
     const isHisPromotion =
       isStudent && sae.semester.promotionId === studentPromotionId;
     const status = computeSaeStatus(sae);
@@ -293,6 +346,7 @@ export class SaesService {
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
+      tdGroup: sae.tdGroup,
       thematic: sae.thematic.label,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
@@ -323,8 +377,21 @@ export class SaesService {
 
     const semester = await this.prisma.semester.findUnique({
       where: { id: dto.semesterId },
+      select: { id: true, number: true },
     });
     if (!semester) throw new NotFoundException('Semestre non trouvé');
+
+    if (this.isTdScopedSemester(semester.number) && !dto.tdGroup) {
+      throw new BadRequestException(
+        'Le champ tdGroup est obligatoire pour les semestres 4, 5 et 6',
+      );
+    }
+
+    if (!this.isTdScopedSemester(semester.number) && dto.tdGroup) {
+      throw new BadRequestException(
+        'Le champ tdGroup est autorisé uniquement pour les semestres 4, 5 et 6',
+      );
+    }
 
     const teacher = await this.prisma.user.findUnique({
       where: { id: dto.teacherId },
@@ -357,6 +424,9 @@ export class SaesService {
         description: dto.description,
         instructions: dto.instructions,
         semesterId: dto.semesterId,
+        tdGroup: this.isTdScopedSemester(semester.number)
+          ? (dto.tdGroup as TdGroup)
+          : null,
         thematicId: dto.thematicId,
         bannerId: dto.bannerId,
         startDate: new Date(dto.startDate),
@@ -386,6 +456,7 @@ export class SaesService {
       description: sae.description,
       instructions: sae.instructions,
       semesterId: sae.semesterId,
+      tdGroup: sae.tdGroup,
       thematic: sae.thematic.label,
       startDate: sae.startDate,
       dueDate: sae.dueDate,
@@ -437,6 +508,38 @@ export class SaesService {
       if (!banner) throw new NotFoundException('Bannière non trouvée');
     }
 
+    let targetSemesterNumber: number | undefined;
+    if (dto.semesterId) {
+      const semester = await this.prisma.semester.findUnique({
+        where: { id: dto.semesterId },
+        select: { number: true },
+      });
+      if (!semester) throw new NotFoundException('Semestre non trouvé');
+      targetSemesterNumber = semester.number;
+    } else {
+      const currentSemester = await this.prisma.semester.findUnique({
+        where: { id: sae.semesterId },
+        select: { number: true },
+      });
+      if (!currentSemester) throw new NotFoundException('Semestre non trouvé');
+      targetSemesterNumber = currentSemester.number;
+    }
+
+    const targetIsTdScoped = this.isTdScopedSemester(targetSemesterNumber);
+    const effectiveTdGroup = dto.tdGroup ?? sae.tdGroup ?? undefined;
+
+    if (targetIsTdScoped && !effectiveTdGroup) {
+      throw new BadRequestException(
+        'Le champ tdGroup est obligatoire pour les semestres 4, 5 et 6',
+      );
+    }
+
+    if (!targetIsTdScoped && dto.tdGroup) {
+      throw new BadRequestException(
+        'Le champ tdGroup est autorisé uniquement pour les semestres 4, 5 et 6',
+      );
+    }
+
     const updated = await this.prisma.sae.update({
       where: { id },
       data: {
@@ -444,6 +547,7 @@ export class SaesService {
         description: dto.description,
         instructions: dto.instructions,
         semesterId: dto.semesterId,
+        tdGroup: targetIsTdScoped ? (effectiveTdGroup as TdGroup) : null,
         thematicId: dto.thematicId,
         bannerId: dto.bannerId,
         startDate: dto.startDate ? new Date(dto.startDate) : undefined,
@@ -473,6 +577,7 @@ export class SaesService {
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
+      tdGroup: updated.tdGroup,
       thematic: updated.thematic.label,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
@@ -533,6 +638,7 @@ export class SaesService {
       description: updated.description,
       instructions: updated.instructions,
       semesterId: updated.semesterId,
+      tdGroup: updated.tdGroup,
       thematic: updated.thematic.label,
       startDate: updated.startDate,
       dueDate: updated.dueDate,
@@ -708,5 +814,9 @@ export class SaesService {
         'Action réservée aux administrateurs ou au propriétaire de la SAE',
       );
     }
+  }
+
+  private isTdScopedSemester(semesterNumber: number): boolean {
+    return semesterNumber >= 4 && semesterNumber <= 6;
   }
 }

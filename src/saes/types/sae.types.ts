@@ -15,6 +15,7 @@ export interface SaeResponse {
   description: string;
   instructions?: string | null;
   semesterId: string;
+  tdGroup: 'A' | 'B' | null;
   thematic: string;
   startDate: Date;
   dueDate: Date;

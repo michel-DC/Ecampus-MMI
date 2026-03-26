@@ -1,6 +1,7 @@
 import {
   IsBoolean,
   IsDateString,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -38,6 +39,12 @@ export class CreateSaeDto {
 
   @IsDateString()
   dueDate: string;
+
+  @IsOptional()
+  @IsIn(['A', 'B'], {
+    message: "Le champ tdGroup doit valoir 'A' ou 'B'",
+  })
+  tdGroup?: 'A' | 'B';
 
   @IsOptional()
   @IsBoolean({ message: 'Le champ isPublished doit être un booléen' })

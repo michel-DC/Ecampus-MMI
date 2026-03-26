@@ -442,6 +442,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - isUrgent : true pour voir les échéances proches (< 3 jours).
 - **Note** :
   - Les étudiants ne voient que les SAE publiées de **leur propre promotion**.
+  - Pour les semestres 4 à 6, les étudiants ne voient que les SAE de leur **groupe TD** (`A` ou `B`).
   - Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
 - **Réponse** (200 OK) :
 
@@ -455,6 +456,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
       "banner": "https://utfs.io/f/banner_web.png",
       "description": "Création d'un site web complet...",
       "semesterId": "semester_uuid_1",
+      "tdGroup": null,
       "thematic": "Développement Web",
       "startDate": "2024-03-01T08:00:00.000Z",
       "dueDate": "2024-06-30T23:59:59.000Z",
@@ -510,6 +512,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC (Si publiée), TEACHER/ADMIN (Toujours)
 - **Note** :
   - Les étudiants ne peuvent accéder qu'aux SAE de leur propre promotion.
+  - Pour les semestres 4 à 6, un étudiant ne peut pas accéder aux SAE destinées à l'autre groupe TD.
   - Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
 - **Réponse** (200 OK) :
 
@@ -523,6 +526,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "description": "Description détaillée...",
     "instructions": "Instructions complètes pour le rendu...",
     "semesterId": "semester_uuid_1",
+    "tdGroup": "A",
     "thematic": "Développement Web",
     "startDate": "2024-03-01T08:00:00.000Z",
     "dueDate": "2024-06-30T23:59:59.000Z",
@@ -556,6 +560,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   "description": "Description",
   "instructions": "Optionnel",
   "semesterId": "UUID",
+  "tdGroup": "A",
   "teacherId": "String",
   "thematicId": "UUID",
   "bannerId": "UUID",
@@ -564,7 +569,10 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-- **Note** : L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
+- **Note** :
+  - L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
+  - Pour les semestres 4, 5 et 6, le champ `tdGroup` est **obligatoire** (`A` ou `B`).
+  - Pour les autres semestres, le champ `tdGroup` doit être absent.
 - **Réponse** (201 Created) :
 
 ```json
@@ -576,6 +584,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "banner": "https://utfs.io/f/default_banner.png",
     "description": "Description...",
     "semesterId": "semester_uuid_1",
+    "tdGroup": "A",
     "thematic": "Communication",
     "startDate": "2026-03-01T08:00:00.000Z",
     "dueDate": "2026-06-30T23:59:59.000Z",
@@ -597,7 +606,10 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Méthode** : PATCH
 - **URL** : /api/saes/:id
 - **Rôle** : TEACHER (Propriétaire uniquement), ADMIN
-- **Note** : Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
+- **Note** :
+  - Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
+  - Si le semestre ciblé est 4, 5 ou 6, `tdGroup` doit être défini (`A` ou `B`).
+  - Si le semestre ciblé n'est pas entre 4 et 6, `tdGroup` est remis à `null`.
 - **Réponse** (200 OK) :
 
 ```json
@@ -783,6 +795,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```
 
 - **Note** : Le champ `isPublic` (défaut: `false`) détermine si le rendu sera visible par les autres étudiants et le public.
+- **Note complémentaire** : Un étudiant ne peut soumettre que pour une SAE qui correspond à son groupe TD (semestres 4 à 6).
 - **Réponse** (201 Created) :
 
 ```json

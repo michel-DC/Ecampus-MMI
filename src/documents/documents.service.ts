@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+import { deriveTdGroupFromGroupName } from '../lib/td-group';
 import { computeSaeStatus } from '../saes/types/sae.types';
 import { CreateSaeDocumentDto } from './dto/create-sae-document.dto';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
@@ -162,7 +163,10 @@ export class DocumentsService {
 
     const studentProfile = await this.prisma.studentProfile.findUnique({
       where: { userId: studentId },
-      select: { promotionId: true },
+      select: {
+        promotionId: true,
+        group: { select: { name: true } },
+      },
     });
 
     if (!studentProfile) {
@@ -172,6 +176,21 @@ export class DocumentsService {
     if (sae.semester.promotionId !== studentProfile.promotionId) {
       throw new ForbiddenException(
         "Cette SAE n'appartient pas à votre promotion",
+      );
+    }
+
+    const studentTdGroup = deriveTdGroupFromGroupName(
+      studentProfile.group?.name,
+    );
+    if (!studentTdGroup) {
+      throw new ForbiddenException(
+        'Impossible de déterminer votre groupe TD à partir de votre groupe',
+      );
+    }
+
+    if (sae.tdGroup && sae.tdGroup !== studentTdGroup) {
+      throw new ForbiddenException(
+        "Cette SAE n'est pas destinée à votre groupe TD",
       );
     }
 
@@ -229,6 +248,39 @@ export class DocumentsService {
     saeId: string,
     studentId: string,
   ): Promise<StudentSubmissionResponse> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+      select: { tdGroup: true },
+    });
+
+    if (!sae) {
+      throw new NotFoundException('SAE non trouvée');
+    }
+
+    const studentProfile = await this.prisma.studentProfile.findUnique({
+      where: { userId: studentId },
+      select: { group: { select: { name: true } } },
+    });
+
+    if (!studentProfile) {
+      throw new ForbiddenException('Profil étudiant non trouvé');
+    }
+
+    const studentTdGroup = deriveTdGroupFromGroupName(
+      studentProfile.group?.name,
+    );
+    if (!studentTdGroup) {
+      throw new ForbiddenException(
+        'Impossible de déterminer votre groupe TD à partir de votre groupe',
+      );
+    }
+
+    if (sae.tdGroup && sae.tdGroup !== studentTdGroup) {
+      throw new ForbiddenException(
+        "Cette SAE n'est pas destinée à votre groupe TD",
+      );
+    }
+
     const submission = await this.prisma.studentSubmission.findUnique({
       where: { saeId_studentId: { saeId, studentId } },
       include: {
@@ -268,6 +320,7 @@ export class DocumentsService {
       where: { id: saeId, deletedAt: null },
       select: {
         isPublished: true,
+        tdGroup: true,
         createdById: true,
         invitations: { select: { userId: true } },
       },
@@ -282,6 +335,30 @@ export class DocumentsService {
     );
 
     const canSeePrivateSubmissions = isAdmin || isOwner || isInvited;
+
+    if (requestingUserRole === UserRole.STUDENT && requestingUserId) {
+      const profile = await this.prisma.studentProfile.findUnique({
+        where: { userId: requestingUserId },
+        select: { group: { select: { name: true } } },
+      });
+
+      if (!profile) {
+        throw new ForbiddenException('Profil étudiant non trouvé');
+      }
+
+      const studentTdGroup = deriveTdGroupFromGroupName(profile.group?.name);
+      if (!studentTdGroup) {
+        throw new ForbiddenException(
+          'Impossible de déterminer votre groupe TD à partir de votre groupe',
+        );
+      }
+
+      if (sae.tdGroup && sae.tdGroup !== studentTdGroup) {
+        throw new ForbiddenException(
+          "Cette SAE n'est pas destinée à votre groupe TD",
+        );
+      }
+    }
 
     if (!sae.isPublished && !canSeePrivateSubmissions) {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");

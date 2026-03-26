@@ -149,6 +149,7 @@ model Sae {
   description String   @db.Text
   instructions String? @db.Text
   semesterId  String
+  tdGroup     TdGroup?
   thematicId  String
   createdById String
   startDate   DateTime
@@ -227,6 +228,11 @@ enum DocumentType {
   SUJET
   RESOURCE
   AUTRE
+}
+
+enum TdGroup {
+  A
+  B
 }
 
 model SaeDocument {
