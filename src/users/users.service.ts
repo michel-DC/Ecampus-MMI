@@ -214,4 +214,75 @@ export class UsersService {
       data: { isValidated: false },
     });
   }
+
+  async updateStudentProfile(
+    studentId: string,
+    dto: {
+      firstname?: string;
+      lastname?: string;
+      promotionId?: string;
+      groupId?: string;
+    },
+  ): Promise<void> {
+    const studentProfile = await this.prisma.studentProfile.findUnique({
+      where: { userId: studentId },
+      include: { user: true },
+    });
+
+    if (!studentProfile) {
+      throw new NotFoundException(
+        'Profil étudiant non trouvé pour cet utilisateur.',
+      );
+    }
+
+    if (studentProfile.user.role !== UserRole.STUDENT) {
+      throw new ConflictException("Cet utilisateur n'est pas un étudiant.");
+    }
+
+    const updateData: any = {};
+
+    // Valider et ajouter les données de l'utilisateur
+    if (dto.firstname || dto.lastname) {
+      const updates: any = {};
+      if (dto.firstname) {
+        updates.firstname = dto.firstname;
+      }
+      if (dto.lastname) {
+        updates.lastname = dto.lastname;
+      }
+      updateData.user = { update: updates };
+    }
+
+    // Valider et ajouter les données du profil étudiant
+    if (dto.promotionId) {
+      const promotion = await this.prisma.promotion.findUnique({
+        where: { id: dto.promotionId },
+      });
+      if (!promotion) {
+        throw new NotFoundException('Promotion non trouvée.');
+      }
+      updateData.promotionId = dto.promotionId;
+    }
+
+    if (dto.groupId) {
+      const group = await this.prisma.group.findUnique({
+        where: { id: dto.groupId },
+      });
+      if (!group) {
+        throw new NotFoundException('Groupe non trouvé.');
+      }
+      updateData.groupId = dto.groupId;
+    }
+
+    // Si aucune mise à jour, ne faire rien
+    if (Object.keys(updateData).length === 0) {
+      return;
+    }
+
+    // Effectuer la mise à jour du StudentProfile
+    await this.prisma.studentProfile.update({
+      where: { userId: studentId },
+      data: updateData,
+    });
+  }
 }

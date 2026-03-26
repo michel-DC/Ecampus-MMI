@@ -254,6 +254,8 @@ model StudentSubmission {
   description String   @db.Text
   imageUrl    String?
   isPublic    Boolean  @default(false)
+  isLate      Boolean  @default(false)
+  lateTime    Int?
   submittedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

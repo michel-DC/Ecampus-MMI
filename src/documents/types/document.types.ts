@@ -21,6 +21,8 @@ export interface StudentSubmissionResponse {
   description: string;
   imageUrl?: string | null;
   isPublic: boolean;
+  isLate: boolean;
+  lateTime?: number | null;
   submittedAt: Date;
   updatedAt: Date;
 }

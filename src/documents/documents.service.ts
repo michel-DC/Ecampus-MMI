@@ -148,11 +148,17 @@ export class DocumentsService {
       throw new ForbiddenException("Cette SAE n'est pas encore publiée");
 
     const status = computeSaeStatus(sae);
-    if (status !== 'ongoing') {
+    if (status !== 'ongoing' && status !== 'finished') {
       throw new BadRequestException(
-        'Les rendus ne sont autorisés que lorsque la SAE est en cours',
+        'Les rendus ne sont autorisés que lorsque la SAE est publiée',
       );
     }
+
+    const now = new Date();
+    const isLate = now > sae.dueDate;
+    const lateTime = isLate
+      ? Math.floor((now.getTime() - sae.dueDate.getTime()) / 1000)
+      : null;
 
     const studentProfile = await this.prisma.studentProfile.findUnique({
       where: { userId: studentId },
@@ -180,6 +186,8 @@ export class DocumentsService {
         description: dto.description,
         imageUrl: dto.imageUrl,
         isPublic: dto.isPublic ?? false,
+        isLate,
+        lateTime,
       },
       update: {
         url: dto.url,
@@ -188,7 +196,9 @@ export class DocumentsService {
         description: dto.description,
         imageUrl: dto.imageUrl,
         isPublic: dto.isPublic,
-        submittedAt: new Date(),
+        isLate,
+        lateTime,
+        submittedAt: now,
       },
       include: {
         student: { select: { firstname: true, lastname: true } },
@@ -208,6 +218,8 @@ export class DocumentsService {
       description: submission.description,
       imageUrl: submission.imageUrl,
       isPublic: submission.isPublic,
+      isLate: submission.isLate,
+      lateTime: submission.lateTime,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -240,6 +252,8 @@ export class DocumentsService {
       description: submission.description,
       imageUrl: submission.imageUrl,
       isPublic: submission.isPublic,
+      isLate: submission.isLate,
+      lateTime: submission.lateTime,
       submittedAt: submission.submittedAt,
       updatedAt: submission.updatedAt,
     };
@@ -299,6 +313,8 @@ export class DocumentsService {
       description: s.description,
       imageUrl: s.imageUrl,
       isPublic: s.isPublic,
+      isLate: s.isLate,
+      lateTime: s.lateTime,
       submittedAt: s.submittedAt,
       updatedAt: s.updatedAt,
     }));

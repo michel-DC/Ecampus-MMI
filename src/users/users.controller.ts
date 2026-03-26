@@ -19,6 +19,7 @@ import { UserFiltersDto } from './dto/user-filters.dto';
 import { UserSearchResponse, CreatedTeacherResponse } from './types/user.types';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { StudentIdParamDto } from './dto/student-id-param.dto';
+import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 
 interface PendingStudentInfo {
   id: string;
@@ -144,6 +145,32 @@ export class UsersController {
       }
       throw new InternalServerErrorException(
         'Erreur lors de la dévalidation du profil étudiant.',
+      );
+    }
+  }
+
+  @Post(':studentId/update')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateStudentProfile(
+    @Param() params: StudentIdParamDto,
+    @Body() dto: UpdateStudentProfileDto,
+  ): Promise<{ success: boolean; data: null; message: string }> {
+    try {
+      await this.usersService.updateStudentProfile(params.studentId, dto);
+      return {
+        success: true,
+        data: null,
+        message: 'Profil étudiant mis à jour avec succès.',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      } else if (error instanceof ConflictException) {
+        throw new ConflictException(error.message);
+      }
+      throw new InternalServerErrorException(
+        'Erreur lors de la mise à jour du profil étudiant.',
       );
     }
   }

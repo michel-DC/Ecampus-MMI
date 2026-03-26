@@ -27,6 +27,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```
 
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -58,6 +59,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```
 
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -84,6 +86,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : CONNECTÉ (Tous rôles)
 - **Description** : Termine la session actuelle.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -100,6 +103,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Sécurité** : AuthGuard
 - **Description** : Retourne les informations de l'utilisateur connecté.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -131,6 +135,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```
 
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -151,6 +156,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - limit : Nombre de résultats (défaut: 20).
 - **Description** : Permet de trouver un utilisateur pour l'inviter dans une SAE ou consulter son profil.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -185,6 +191,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Description** : Crée un compte professeur avec un mot de passe temporaire généré automatiquement. Un email est envoyé au professeur avec ses identifiants.
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -216,6 +223,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ```
 
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -240,6 +248,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Description** : Met à jour la photo de profil de l'utilisateur connecté en base de données et supprime l'ancienne image si elle était stockée sur le serveur distant (utfs.io).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -259,6 +268,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC
 - **Description** : Liste toutes les promotions (MMI1, MMI2, etc.) ainsi que les archives historiques.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -282,6 +292,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC
 - **Description** : Liste tous les groupes de TD/TP (GROUPEA1, etc.).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -302,6 +313,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC
 - **Description** : Liste les semestres avec leur promotion associée.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -324,6 +336,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC
 - **Description** : Liste les thématiques disponibles (Développement Web, UX/UI, etc.).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -349,6 +362,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC
 - **Description** : Récupère la liste des URLs de bannières prédéfinies pour les SAE.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -375,6 +389,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - description : (Étudiants uniquement) Description du travail rendu.
 - **Description** : Gère l'upload vers le stockage distant et l'enregistrement en base de données pour une SAE spécifique.
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -400,6 +415,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - file : Le fichier image (PNG, JPG, JPEG, WEBP).
 - **Description** : Upload une image de profil vers le stockage distant et retourne l'URL générée. Cette URL doit ensuite être utilisée avec l'endpoint de mise à jour du profil (Endpoint 9).
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -428,6 +444,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les étudiants ne voient que les SAE publiées de **leur propre promotion**.
   - Les indicateurs isSubmitted et isUrgent sont personnalisés si l'utilisateur est connecté.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -467,6 +484,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Filtres (Query)** : year (ex: 2023).
 - **Note** : Seuls les rendus marqués comme **publics** par les étudiants sont affichés ici.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -494,6 +512,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les étudiants ne peuvent accéder qu'aux SAE de leur propre promotion.
   - Retourne les indicateurs isSubmitted, isUrgent et les statistiques d'avancement pour les profs.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -547,6 +566,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : L'ADMIN assigne la SAE à un professeur spécifique via le champ `teacherId`. Le professeur devient automatiquement propriétaire de la SAE et peut la modifier.
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -579,6 +599,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : TEACHER (Propriétaire uniquement), ADMIN
 - **Note** : Un TEACHER ne peut modifier que les SAE dont il est propriétaire. Un ADMIN peut modifier toutes les SAE.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -598,6 +619,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : TEACHER (Propriétaire), ADMIN
 - **Note** : Un professeur peut publier uniquement les SAE dont il est propriétaire. Un ADMIN peut publier toutes les SAE.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -615,6 +637,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : /api/saes/:id
 - **Rôle** : **ADMIN uniquement**
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -629,6 +652,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - DELETE /api/saes/:id/invitations/:invitationId : Supprimer un invité (Rôle: TEACHER Propriétaire, ADMIN).
 - **Note** : Un TEACHER ne peut gérer les invitations que pour les SAE dont il est propriétaire. Un ADMIN peut gérer les invitations de toutes les SAE.
 - **Réponse** (GET /api/saes/:id/invitations) :
+
 ```json
 {
   "success": true,
@@ -654,6 +678,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : /api/saes/:saeId/announcements
 - **Rôle** : PUBLIC (Si SAE publiée)
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -677,6 +702,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : /api/saes/:saeId/announcements/:id
 - **Rôle** : PUBLIC (Si SAE publiée)
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -697,6 +723,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - PATCH /api/saes/:saeId/announcements/:id : Modifier (Rôle: TEACHER Propriétaire/Invité).
 - DELETE /api/saes/:saeId/announcements/:id : Supprimer (Rôle: TEACHER Propriétaire/Invité).
 - **Réponse** (POST /api/saes/:saeId/announcements) :
+
 ```json
 {
   "success": true,
@@ -719,6 +746,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - POST /api/saes/:saeId/documents : Ajouter (Rôle: TEACHER Propriétaire/Invité).
 - DELETE /api/saes/:saeId/documents/:documentId : Supprimer (Rôle: TEACHER Propriétaire/Invité).
 - **Réponse** (GET /api/saes/:saeId/documents) :
+
 ```json
 {
   "success": true,
@@ -756,6 +784,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : Le champ `isPublic` (défaut: `false`) détermine si le rendu sera visible par les autres étudiants et le public.
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -769,6 +798,8 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "description": "Voici mon projet final pour la SAE.",
     "imageUrl": "https://utfs.io/f/preview.png",
     "isPublic": true,
+    "isLate": false,
+    "lateTime": null,
     "submittedAt": "2024-06-15T14:30:00.000Z",
     "updatedAt": "2024-06-15T14:30:00.000Z"
   }
@@ -781,6 +812,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **URL** : /api/saes/:saeId/submission/me
 - **Rôle** : STUDENT concerné
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -794,6 +826,8 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "description": "Voici mon projet final pour la SAE.",
     "imageUrl": "https://utfs.io/f/preview.png",
     "isPublic": true,
+    "isLate": false,
+    "lateTime": null,
     "submittedAt": "2024-06-15T14:30:00.000Z",
     "updatedAt": "2024-06-15T14:30:00.000Z"
   }
@@ -811,6 +845,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
   - Les autres utilisateurs ne voient que les rendus marqués comme **publics**.
   - Un étudiant voit toujours son propre rendu.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -843,6 +878,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : PUBLIC (Si SAE publiée) / TEACHER / ADMIN
 - **Description** : Liste les catégories de notes (ex: Qualité du code, Design) définies pour une SAE.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -861,6 +897,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Description** : Retourne la liste des étudiants ayant rendu un travail pour cette SAE avec leurs notes par catégorie et leur moyenne.
 - **Note** : Les rendus marqués comme **privés** (`isPublic: false`) sont automatiquement masqués pour le public et les autres étudiants. Seuls les enseignants de la SAE et les administrateurs voient l'intégralité des notes.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -869,8 +906,18 @@ Les routes d'authentification de base sont gérées par Better Auth.
       "submissionId": "sub_uuid_123",
       "studentName": { "firstname": "Jean", "lastname": "Dupont" },
       "grades": [
-        { "id": "grade_uuid_1", "categoryId": "cat_uuid_1", "categoryName": "Qualité du Code", "value": 15.5 },
-        { "id": "grade_uuid_2", "categoryId": "cat_uuid_2", "categoryName": "Design & UI", "value": 18 }
+        {
+          "id": "grade_uuid_1",
+          "categoryId": "cat_uuid_1",
+          "categoryName": "Qualité du Code",
+          "value": 15.5
+        },
+        {
+          "id": "grade_uuid_2",
+          "categoryId": "cat_uuid_2",
+          "categoryName": "Design & UI",
+          "value": 18
+        }
       ],
       "average": 16.75
     }
@@ -894,6 +941,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : Création possible uniquement une fois la SAE terminée (`now > dueDate`).
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -920,6 +968,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Description** : Met à jour massivement les notes des étudiants à partir du fichier Excel. Les identifiants masqués dans le fichier garantissent l'intégrité des données.
 - **Note** : Import possible uniquement après la `dueDate`.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -946,6 +995,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 - **Note** : Saisie possible uniquement après la `dueDate`. Les notes doivent être entre 0 et 20.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -953,8 +1003,18 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "submissionId": "sub_uuid_123",
     "studentName": { "firstname": "Jean", "lastname": "Dupont" },
     "grades": [
-      { "id": "grade_uuid_1", "categoryId": "cat_uuid_1", "categoryName": "Qualité du Code", "value": 15.5 },
-      { "id": "grade_uuid_2", "categoryId": "cat_uuid_2", "categoryName": "Design & UI", "value": 18 }
+      {
+        "id": "grade_uuid_1",
+        "categoryId": "cat_uuid_1",
+        "categoryName": "Qualité du Code",
+        "value": 15.5
+      },
+      {
+        "id": "grade_uuid_2",
+        "categoryId": "cat_uuid_2",
+        "categoryName": "Design & UI",
+        "value": 18
+      }
     ],
     "average": 16.75
   }
@@ -969,6 +1029,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Description** : Retourne le détail des notes par catégorie pour un rendu spécifique, ainsi que la moyenne calculée.
 - **Note** : Si le rendu est privé (`isPublic: false`), l'accès est restreint à l'auteur du rendu, aux enseignants de la SAE et aux administrateurs. Une erreur `403 Forbidden` est retournée sinon.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -976,8 +1037,18 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "submissionId": "sub_uuid_123",
     "studentName": { "firstname": "Jean", "lastname": "Dupont" },
     "grades": [
-      { "id": "grade_uuid_1", "categoryId": "cat_uuid_1", "categoryName": "Qualité du Code", "value": 15.5 },
-      { "id": "grade_uuid_2", "categoryId": "cat_uuid_2", "categoryName": "Design & UI", "value": 18 }
+      {
+        "id": "grade_uuid_1",
+        "categoryId": "cat_uuid_1",
+        "categoryName": "Qualité du Code",
+        "value": 15.5
+      },
+      {
+        "id": "grade_uuid_2",
+        "categoryId": "cat_uuid_2",
+        "categoryName": "Design & UI",
+        "value": 18
+      }
     ],
     "average": 16.75
   }
@@ -991,6 +1062,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Rôle** : STUDENT uniquement
 - **Description** : Retourne la liste de tous les rendus de l'étudiant with leurs notes respectives pour toutes les SAE, ainsi que sa moyenne générale globale.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1001,7 +1073,12 @@ Les routes d'authentification de base sont gérées par Better Auth.
         "saeTitle": "Projet Web Dynamique",
         "studentName": { "firstname": "Jean", "lastname": "Dupont" },
         "grades": [
-          { "id": "grade_uuid_1", "categoryId": "cat_uuid_1", "categoryName": "Qualité du Code", "value": 15.5 }
+          {
+            "id": "grade_uuid_1",
+            "categoryId": "cat_uuid_1",
+            "categoryName": "Qualité du Code",
+            "value": 15.5
+          }
         ],
         "average": 15.5
       }
@@ -1023,6 +1100,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Sécurité** : AuthGuard, RolesGuard
 - **Description** : Retourne la liste des étudiants dont le profil est en attente de validation après leur onboarding.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1048,6 +1126,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Sécurité** : AuthGuard, RolesGuard
 - **Description** : Valide le profil d'un étudiant en attente. Le `studentId` est l'identifiant de l'utilisateur (UUID ou string).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1064,6 +1143,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 - **Sécurité** : AuthGuard, RolesGuard
 - **Description** : Dévalide le profil d'un étudiant précédemment validé. Le `studentId` est l'identifiant de l'utilisateur (UUID ou string).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1072,17 +1152,50 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+### 43. Modifier le Profil Étudiant
+
+- **Méthode** : POST
+- **URL** : /api/users/:studentId/update
+- **Rôle** : **ADMIN uniquement**
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Permet à un administrateur de modifier les informations du profil étudiant en cas d'erreur lors de l'onboarding (nom, prénom, promotion, groupe). Tous les champs sont optionnels.
+- **Body** :
+
+```json
+{
+  "firstname": "Jean",
+  "lastname": "Dupont",
+  "promotionId": "UUID_NEW_PROMO",
+  "groupId": "UUID_NEW_GROUP"
+}
+```
+
+- **Note** :
+  - Tous les champs sont optionnels
+  - La promotion et le groupe doivent exister en base de données
+  - Le `studentId` doit correspondre à un utilisateur de rôle STUDENT avec un profil existant
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": null,
+  "message": "Profil étudiant mis à jour avec succès."
+}
+```
+
 ---
 
 ## Module Paliers (Milestones)
 
-### 43. Liste des Paliers d'une SAE
+### 44. Liste des Paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones
 - **Rôle** : PUBLIC (Si SAE publiée)
 - **Description** : Récupère la liste ordonnée des paliers (milestones) pour une SAE donnée.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1100,7 +1213,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 44. Créer un Palier
+### 45. Créer un Palier
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones
@@ -1114,7 +1227,9 @@ Les routes d'authentification de base sont gérées par Better Auth.
   "position": 1
 }
 ```
+
 - **Réponse** (201 Created) :
+
 ```json
 {
   "success": true,
@@ -1130,12 +1245,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 45. Modifier un Palier
+### 46. Modifier un Palier
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
 - **Rôle** : TEACHER (Propriétaire), ADMIN
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1147,12 +1263,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 46. Supprimer un Palier
+### 47. Supprimer un Palier
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
 - **Rôle** : TEACHER (Propriétaire), ADMIN
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1160,7 +1277,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 47. Mettre à jour sa progression (Étudiant)
+### 48. Mettre à jour sa progression (Étudiant)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
@@ -1174,7 +1291,9 @@ Les routes d'authentification de base sont gérées par Better Auth.
   "message": "Commentaire optionnel"
 }
 ```
+
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1191,12 +1310,13 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 48. Voir la progression d'un étudiant sur un palier
+### 49. Voir la progression d'un étudiant sur un palier
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
 - **Rôle** : TEACHER, ADMIN, STUDENT (propre progression uniquement)
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1211,13 +1331,14 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 49. Tableau de bord de progression d'une SAE (Enseignants)
+### 50. Tableau de bord de progression d'une SAE (Enseignants)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress
 - **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
 - **Description** : Retourne tous les paliers avec la liste des progressions de tous les étudiants.
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1240,13 +1361,14 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 50. Ma progression sur les paliers d'une SAE
+### 51. Ma progression sur les paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress/me
 - **Rôle** : STUDENT concerné
 - **Sécurité** : AuthGuard, ProfileValidatedGuard
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1254,20 +1376,25 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "milestones": [
       {
         "milestone": { "id": "mile_uuid_1", "title": "Palier 1" },
-        "progress": { "id": "prog_uuid_1", "isReached": true, "reachedAt": "2024-03-23T12:00:00.000Z" }
+        "progress": {
+          "id": "prog_uuid_1",
+          "isReached": true,
+          "reachedAt": "2024-03-23T12:00:00.000Z"
+        }
       }
     ]
   }
 }
 ```
 
-### 51. Statistiques de progression des Paliers
+### 52. Statistiques de progression des Paliers
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/stats
 - **Rôle** : TEACHER (Propriétaire/Invité), ADMIN
 - **Description** : Retourne des statistiques agrégées sur la validation des paliers (nombre total d'étudiants, nombre de paliers par étudiant, moyenne globale, taux de complétion).
 - **Réponse** (200 OK) :
+
 ```json
 {
   "success": true,
@@ -1275,10 +1402,20 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "totalStudents": 120,
     "milestonesCount": 5,
     "studentsStats": [
-      { "studentId": "user_uuid_123", "firstname": "Jean", "lastname": "Dupont", "validatedCount": 3 }
+      {
+        "studentId": "user_uuid_123",
+        "firstname": "Jean",
+        "lastname": "Dupont",
+        "validatedCount": 3
+      }
     ],
     "milestonesStats": [
-      { "milestoneId": "mile_uuid_1", "title": "Palier 1", "validatedCount": 80, "percentage": 66.67 }
+      {
+        "milestoneId": "mile_uuid_1",
+        "title": "Palier 1",
+        "validatedCount": 80,
+        "percentage": 66.67
+      }
     ],
     "globalProgress": {
       "averageValidated": 2.5,
