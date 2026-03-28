@@ -23,4 +23,6 @@ export interface UserResponse {
   createdAt: Date;
   imageUrl?: string | null;
   isProfileValidated?: boolean;
+  promotion?: string | null;
+  group?: string | null;
 }

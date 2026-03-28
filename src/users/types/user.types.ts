@@ -18,3 +18,13 @@ export interface UserSearchResponse {
   isActive: boolean;
   createdAt: Date;
 }
+
+export interface StudentDirectoryResponse {
+  id: string;
+  firstname: string;
+  lastname: string | null;
+  email: string;
+  promotion: string | null;
+  group: string | null;
+  imageUrl: string | null;
+}

@@ -113,7 +113,9 @@ Les routes d'authentification de base sont gérées par Better Auth.
     "role": "STUDENT",
     "isActive": true,
     "createdAt": "2024-03-20T10:00:00.000Z",
-    "isProfileValidated": true
+    "isProfileValidated": true,
+    "promotion": "MMI 1",
+    "group": "GROUPE A1"
   }
 }
 ```
@@ -147,7 +149,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 ### 6. Recherche d'Utilisateurs
 
 - **Méthode** : GET
-- **URL** : /api/resources/users
+- **URL** : /api/users
 - **Rôle** : TEACHER, ADMIN
 - **Sécurité** : AuthGuard, RolesGuard
 - **Filtres (Query)** :
@@ -1195,7 +1197,33 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Utilisateurs
 
-### 43. Liste des Étudiants en Attente de Validation
+### 43. Annuaire des Étudiants
+
+- **Méthode** : GET
+- **URL** : /api/users/students
+- **Rôle** : TEACHER, ADMIN
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Retourne la liste des étudiants avec leur nom, prénom, email, promotion, groupe et photo de profil.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "user_uuid_123",
+      "firstname": "Jean",
+      "lastname": "Dupont",
+      "email": "jean.dupont@student.univ.fr",
+      "promotion": "MMI 1",
+      "group": "GROUPE A1",
+      "imageUrl": "https://utfs.io/f/avatar_123.webp"
+    }
+  ]
+}
+```
+
+### 44. Liste des Étudiants en Attente de Validation
 
 - **Méthode** : GET
 - **URL** : /api/users/pending-validation
@@ -1221,7 +1249,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 44. Valider un Profil Étudiant
+### 45. Valider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/validate
@@ -1238,7 +1266,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 45. Dévalider un Profil Étudiant
+### 46. Dévalider un Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/unvalidate
@@ -1255,7 +1283,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 46. Modifier le Profil Étudiant
+### 47. Modifier le Profil Étudiant
 
 - **Méthode** : POST
 - **URL** : /api/users/:studentId/update
@@ -1287,7 +1315,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 47. Supprimer un Utilisateur (Professeur ou Étudiant)
+### 48. Supprimer un Utilisateur (Professeur ou Étudiant)
 
 - **Méthode** : DELETE
 - **URL** : /api/users/:userId
@@ -1308,7 +1336,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 
 ## Module Paliers (Milestones)
 
-### 48. Liste des Paliers d'une SAE
+### 49. Liste des Paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones
@@ -1333,7 +1361,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 49. Créer un Palier
+### 50. Créer un Palier
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones
@@ -1365,7 +1393,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 50. Modifier un Palier
+### 51. Modifier un Palier
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1383,7 +1411,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 51. Supprimer un Palier
+### 52. Supprimer un Palier
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1397,7 +1425,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 52. Mettre à jour sa progression (Étudiant)
+### 53. Mettre à jour sa progression (Étudiant)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
@@ -1430,7 +1458,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 53. Voir la progression d'un étudiant sur un palier
+### 54. Voir la progression d'un étudiant sur un palier
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
@@ -1451,7 +1479,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 54. Tableau de bord de progression d'une SAE (Enseignants)
+### 55. Tableau de bord de progression d'une SAE (Enseignants)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress
@@ -1481,7 +1509,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 55. Ma progression sur les paliers d'une SAE
+### 56. Ma progression sur les paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress/me
@@ -1507,7 +1535,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 56. Statistiques de progression des Paliers
+### 57. Statistiques de progression des Paliers
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/stats

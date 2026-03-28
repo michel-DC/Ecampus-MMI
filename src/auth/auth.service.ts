@@ -3,12 +3,12 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { UserRole } from '@prisma/client';
+import { UTApi } from 'uploadthing/server';
 import { PrismaService } from '../prisma/prisma.service';
 import { OnboardingDto } from './dto/onboarding.dto';
-import { UserResponse } from './types/auth.types';
-import { UserRole } from '@prisma/client';
 import { UpdateProfileImageDto } from './dto/update-profile-image.dto';
-import { UTApi } from 'uploadthing/server';
+import { UserResponse } from './types/auth.types';
 
 @Injectable()
 export class AuthService {
@@ -30,6 +30,16 @@ export class AuthService {
         studentProfile: {
           select: {
             isValidated: true,
+            promotion: {
+              select: {
+                label: true,
+              },
+            },
+            group: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
       },
@@ -50,6 +60,8 @@ export class AuthService {
 
     if (user.role === UserRole.STUDENT && user.studentProfile) {
       response.isProfileValidated = user.studentProfile.isValidated;
+      response.promotion = user.studentProfile.promotion?.label ?? null;
+      response.group = user.studentProfile.group?.name ?? null;
     }
 
     return response;

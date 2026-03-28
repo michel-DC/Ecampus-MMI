@@ -19,7 +19,11 @@ import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { StudentIdParamDto } from './dto/student-id-param.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
 import { UserFiltersDto } from './dto/user-filters.dto';
-import { CreatedTeacherResponse, UserSearchResponse } from './types/user.types';
+import {
+  CreatedTeacherResponse,
+  StudentDirectoryResponse,
+  UserSearchResponse,
+} from './types/user.types';
 import { UsersService } from './users.service';
 
 interface PendingStudentInfo {
@@ -98,6 +102,17 @@ export class UsersController {
         'Erreur lors de la récupération des étudiants en attente.',
       );
     }
+  }
+
+  @Get('students')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  async getStudentsDirectory(): Promise<{
+    success: boolean;
+    data: StudentDirectoryResponse[];
+  }> {
+    const data = await this.usersService.getStudentsDirectory();
+    return { success: true, data };
   }
 
   @Post(':studentId/validate')

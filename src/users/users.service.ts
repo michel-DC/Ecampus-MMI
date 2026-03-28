@@ -10,7 +10,11 @@ import { MailService } from '../mail/mail.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { UserFiltersDto } from './dto/user-filters.dto';
-import { CreatedTeacherResponse, UserSearchResponse } from './types/user.types';
+import {
+  CreatedTeacherResponse,
+  StudentDirectoryResponse,
+  UserSearchResponse,
+} from './types/user.types';
 
 @Injectable()
 export class UsersService {
@@ -160,6 +164,39 @@ export class UsersService {
       academicYear: user.studentProfile?.promotion?.academicYear,
       groupName: user.studentProfile?.group?.name,
       isProfileValidated: user.studentProfile?.isValidated,
+    }));
+  }
+
+  async getStudentsDirectory(): Promise<StudentDirectoryResponse[]> {
+    const students = await this.prisma.user.findMany({
+      where: {
+        role: UserRole.STUDENT,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        image: true,
+        studentProfile: {
+          select: {
+            promotion: { select: { label: true } },
+            group: { select: { name: true } },
+          },
+        },
+      },
+      orderBy: { lastname: 'asc' },
+    });
+
+    return students.map((student) => ({
+      id: student.id,
+      firstname: student.firstname,
+      lastname: student.lastname,
+      email: student.email,
+      promotion: student.studentProfile?.promotion?.label ?? null,
+      group: student.studentProfile?.group?.name ?? null,
+      imageUrl: student.image,
     }));
   }
 
