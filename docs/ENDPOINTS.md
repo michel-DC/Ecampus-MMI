@@ -1287,11 +1287,28 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+### 47. Supprimer un Utilisateur (Professeur ou Étudiant)
+
+- **Méthode** : DELETE
+- **URL** : /api/users/:userId
+- **Rôle** : **ADMIN uniquement**
+- **Sécurité** : AuthGuard, RolesGuard
+- **Description** : Supprime un compte utilisateur (professeur ou étudiant) ainsi que les données associées (profil étudiant, rendus, etc.). L'utilisateur doit être de type STUDENT ou TEACHER.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "data": null,
+  "message": "Utilisateur supprimé avec succès."
+}
+```
+
 ---
 
 ## Module Paliers (Milestones)
 
-### 47. Liste des Paliers d'une SAE
+### 48. Liste des Paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones
@@ -1316,7 +1333,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 48. Créer un Palier
+### 49. Créer un Palier
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones
@@ -1348,7 +1365,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 49. Modifier un Palier
+### 50. Modifier un Palier
 
 - **Méthode** : PATCH
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1366,7 +1383,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 50. Supprimer un Palier
+### 51. Supprimer un Palier
 
 - **Méthode** : DELETE
 - **URL** : /api/saes/:saeId/milestones/:milestoneId
@@ -1380,7 +1397,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 51. Mettre à jour sa progression (Étudiant)
+### 52. Mettre à jour sa progression (Étudiant)
 
 - **Méthode** : POST
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress
@@ -1413,7 +1430,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 52. Voir la progression d'un étudiant sur un palier
+### 53. Voir la progression d'un étudiant sur un palier
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/:milestoneId/progress/:studentId
@@ -1434,7 +1451,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 53. Tableau de bord de progression d'une SAE (Enseignants)
+### 54. Tableau de bord de progression d'une SAE (Enseignants)
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress
@@ -1464,7 +1481,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 54. Ma progression sur les paliers d'une SAE
+### 55. Ma progression sur les paliers d'une SAE
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/progress/me
@@ -1490,7 +1507,7 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
-### 55. Statistiques de progression des Paliers
+### 56. Statistiques de progression des Paliers
 
 - **Méthode** : GET
 - **URL** : /api/saes/:saeId/milestones/stats

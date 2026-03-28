@@ -4,13 +4,13 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UserFiltersDto } from './dto/user-filters.dto';
-import { UserSearchResponse, CreatedTeacherResponse } from './types/user.types';
-import { CreateTeacherDto } from './dto/create-teacher.dto';
-import { MailService } from '../mail/mail.service';
 import { UserRole } from '@prisma/client';
 import { auth } from '../lib/auth';
+import { MailService } from '../mail/mail.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateTeacherDto } from './dto/create-teacher.dto';
+import { UserFiltersDto } from './dto/user-filters.dto';
+import { CreatedTeacherResponse, UserSearchResponse } from './types/user.types';
 
 @Injectable()
 export class UsersService {
@@ -283,6 +283,35 @@ export class UsersService {
     await this.prisma.studentProfile.update({
       where: { userId: studentId },
       data: updateData,
+    });
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { studentProfile: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé.');
+    }
+
+    if (user.role !== UserRole.STUDENT && user.role !== UserRole.TEACHER) {
+      throw new ConflictException(
+        'Seuls les étudiants et les enseignants peuvent être supprimés.',
+      );
+    }
+
+    // Supprimer le profil étudiant s'il existe
+    if (user.studentProfile) {
+      await this.prisma.studentProfile.delete({
+        where: { userId: userId },
+      });
+    }
+
+    // Supprimer l'utilisateur
+    await this.prisma.user.delete({
+      where: { id: userId },
     });
   }
 }

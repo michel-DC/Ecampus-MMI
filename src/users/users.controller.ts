@@ -1,25 +1,26 @@
 import {
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-  Post,
-  Param,
   Body,
+  ConflictException,
+  Controller,
+  Delete,
+  Get,
   InternalServerErrorException,
   NotFoundException,
-  ConflictException,
+  Param,
+  Post,
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { UsersService } from './users.service';
-import { UserFiltersDto } from './dto/user-filters.dto';
-import { UserSearchResponse, CreatedTeacherResponse } from './types/user.types';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { StudentIdParamDto } from './dto/student-id-param.dto';
 import { UpdateStudentProfileDto } from './dto/update-student-profile.dto';
+import { UserFiltersDto } from './dto/user-filters.dto';
+import { CreatedTeacherResponse, UserSearchResponse } from './types/user.types';
+import { UsersService } from './users.service';
 
 interface PendingStudentInfo {
   id: string;
@@ -171,6 +172,31 @@ export class UsersController {
       }
       throw new InternalServerErrorException(
         'Erreur lors de la mise à jour du profil étudiant.',
+      );
+    }
+  }
+
+  @Delete(':userId')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteUser(
+    @Param('userId') userId: string,
+  ): Promise<{ success: boolean; data: null; message: string }> {
+    try {
+      await this.usersService.deleteUser(userId);
+      return {
+        success: true,
+        data: null,
+        message: 'Utilisateur supprimé avec succès.',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      } else if (error instanceof ConflictException) {
+        throw new ConflictException(error.message);
+      }
+      throw new InternalServerErrorException(
+        "Erreur lors de la suppression de l'utilisateur.",
       );
     }
   }
