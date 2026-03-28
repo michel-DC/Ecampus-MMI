@@ -16,6 +16,7 @@ Pour comprendre le fonctionnement technique ou lancer le projet, veuillez consul
 
 - **[Guide de Lancement (Setup)](docs/LAUNCH.md)** : Comment installer et démarrer le projet localement.
 - **[Architecture](docs/ARCHITECTURE.md)** : Organisation du code, structure des modules et rôles des composants.
+- **[Stratégie de Tests](docs/TESTING.md)** : Infrastructure Vitest, mocking et exécution des tests E2E.
 - **[Stack Technique](docs/STACK.md)** : Liste exhaustive des technologies et dépendances utilisées.
 - **[Documentation API](docs/ENDPOINTS.md)** : Liste complète des points d'entrée et des permissions.
 
