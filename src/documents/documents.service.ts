@@ -4,9 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { UserRole } from '@prisma/client';
 import { deriveTdGroupFromGroupName } from '../lib/td-group';
+import { PrismaService } from '../prisma/prisma.service';
 import { computeSaeStatus } from '../saes/types/sae.types';
 import { CreateSaeDocumentDto } from './dto/create-sae-document.dto';
 import { CreateSubmissionDto } from './dto/create-submission.dto';
@@ -500,6 +500,73 @@ export class DocumentsService {
     });
 
     return { updatedCount: result.count };
+  }
+
+  async updateSpecificSubmissionVisibility(
+    saeId: string,
+    submissionId: string,
+    requestingUserId: string,
+    requestingUserRole: UserRole,
+    isPublic: boolean,
+  ): Promise<StudentSubmissionResponse> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+      select: {
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
+    });
+
+    if (!sae) {
+      throw new NotFoundException('SAE non trouvée');
+    }
+
+    const isAdmin = requestingUserRole === UserRole.ADMIN;
+    if (!isAdmin) {
+      this.assertCanWriteOnSae(
+        sae.createdById,
+        sae.invitations,
+        requestingUserId,
+      );
+    }
+
+    const submission = await this.prisma.studentSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
+    });
+
+    if (!submission || submission.saeId !== saeId) {
+      throw new NotFoundException('Rendu non trouvé');
+    }
+
+    const updatedSubmission = await this.prisma.studentSubmission.update({
+      where: { id: submissionId },
+      data: { isPublic },
+      include: {
+        student: { select: { firstname: true, lastname: true } },
+      },
+    });
+
+    return {
+      id: updatedSubmission.id,
+      saeId: updatedSubmission.saeId,
+      name: {
+        firstname: updatedSubmission.student.firstname,
+        lastname: updatedSubmission.student.lastname,
+      },
+      url: updatedSubmission.url,
+      fileName: updatedSubmission.name,
+      mimeType: updatedSubmission.mimeType,
+      description: updatedSubmission.description,
+      imageUrl: updatedSubmission.imageUrl,
+      isPublic: updatedSubmission.isPublic,
+      isLate: updatedSubmission.isLate,
+      lateTime: updatedSubmission.lateTime,
+      submittedAt: updatedSubmission.submittedAt,
+      updatedAt: updatedSubmission.updatedAt,
+    };
   }
 
   async updateAllPromotionSubmissionsVisibility(

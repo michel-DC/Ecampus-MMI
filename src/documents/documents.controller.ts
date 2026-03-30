@@ -4,17 +4,17 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
-  Patch,
 } from '@nestjs/common';
 import { UserRole } from '@prisma/client';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { OnboardingGuard } from '../auth/guards/onboarding.guard';
 import { OptionalAuthGuard } from '../auth/guards/optional-auth.guard';
-import { Roles } from '../auth/decorators/roles.decorator';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import type { JwtPayload } from '../auth/types/auth.types';
 import { DocumentsService } from './documents.service';
 import { CreateSaeDocumentDto } from './dto/create-sae-document.dto';
@@ -136,6 +136,25 @@ export class DocumentsController {
   ): Promise<{ success: boolean; data: { updatedCount: number } }> {
     const data = await this.documentsService.updateAllSaeSubmissionsVisibility(
       saeId,
+      user.sub,
+      user.role,
+      dto.isPublic,
+    );
+    return { success: true, data };
+  }
+
+  @Patch('submissions/:submissionId/visibility')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  async updateSpecificSubmissionVisibility(
+    @Param('saeId') saeId: string,
+    @Param('submissionId') submissionId: string,
+    @Body() dto: UpdateSubmissionVisibilityDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<{ success: boolean; data: StudentSubmissionResponse }> {
+    const data = await this.documentsService.updateSpecificSubmissionVisibility(
+      saeId,
+      submissionId,
       user.sub,
       user.role,
       dto.isPublic,
