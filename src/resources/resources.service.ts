@@ -3,21 +3,22 @@ import {
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { UTApi } from 'uploadthing/server';
 import { UserRole } from '@prisma/client';
+import { UTApi } from 'uploadthing/server';
 import { DocumentsService } from '../documents/documents.service';
+import {
+  SaeDocumentResponse,
+  StudentSubmissionResponse,
+} from '../documents/types/document.types';
+import { PrismaService } from '../prisma/prisma.service';
 import { UploadResourceDto } from './dto/upload-resource.dto';
 import {
   BannerResponse,
   GroupResponse,
   PromotionResponse,
   SemesterResponse,
+  ThematicResponse,
 } from './types/resource.types';
-import {
-  SaeDocumentResponse,
-  StudentSubmissionResponse,
-} from '../documents/types/document.types';
 
 @Injectable()
 export class ResourcesService {
@@ -164,6 +165,17 @@ export class ResourcesService {
           select: { label: true },
         },
       },
+    });
+  }
+
+  async findAllThematics(): Promise<ThematicResponse[]> {
+    return this.prisma.thematic.findMany({
+      select: {
+        id: true,
+        code: true,
+        label: true,
+      },
+      orderBy: { label: 'asc' },
     });
   }
 }

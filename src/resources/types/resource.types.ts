@@ -28,3 +28,9 @@ export interface SemesterResponse {
   };
   createdAt: Date;
 }
+
+export interface ThematicResponse {
+  id: string;
+  code: string;
+  label: string;
+}

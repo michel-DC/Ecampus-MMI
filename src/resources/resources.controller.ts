@@ -7,24 +7,25 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ResourcesService } from './resources.service';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { AuthGuard } from '../auth/guards/auth.guard';
 import { OnboardingGuard } from '../auth/guards/onboarding.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/types/auth.types';
+import {
+  SaeDocumentResponse,
+  StudentSubmissionResponse,
+} from '../documents/types/document.types';
 import { UploadResourceDto } from './dto/upload-resource.dto';
+import { ResourcesService } from './resources.service';
 import {
   BannerResponse,
   GroupResponse,
   PromotionResponse,
   SemesterResponse,
+  ThematicResponse,
 } from './types/resource.types';
-import {
-  SaeDocumentResponse,
-  StudentSubmissionResponse,
-} from '../documents/types/document.types';
 
 @Controller('api/resources')
 export class ResourcesController {
@@ -87,6 +88,15 @@ export class ResourcesController {
     data: SemesterResponse[];
   }> {
     const data = await this.resourcesService.findAllSemesters();
+    return { success: true, data };
+  }
+
+  @Get('thematics')
+  async getThematics(): Promise<{
+    success: boolean;
+    data: ThematicResponse[];
+  }> {
+    const data = await this.resourcesService.findAllThematics();
     return { success: true, data };
   }
 }
