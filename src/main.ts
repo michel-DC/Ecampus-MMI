@@ -1,5 +1,5 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -10,6 +10,7 @@ async function bootstrap(): Promise<void> {
       'http://localhost:5173',
       'http://localhost:3000',
       'https://ecampus-mmi.onrender.com',
+      'https://welizy.fr.yann.allain.mmi-velizy.fr',
     ],
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',

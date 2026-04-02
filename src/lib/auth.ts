@@ -1,6 +1,6 @@
+import { PrismaClient } from '@prisma/client';
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
-import { PrismaClient } from '@prisma/client';
 import { admin } from 'better-auth/plugins';
 
 const prisma = new PrismaClient();
@@ -73,5 +73,6 @@ export const auth = betterAuth({
     'http://localhost:5173',
     'http://localhost:3000',
     'https://ecampus-mmi.onrender.com',
+    'https://welizy.fr.yann.allain.mmi-velizy.fr',
   ],
 });
