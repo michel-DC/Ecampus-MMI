@@ -5,14 +5,16 @@ import { AppModule } from './app.module';
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
 
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://ecampus-mmi.onrender.com',
+    'https://welizy.fr.yann.allain.mmi-velizy.fr',
+    'https://ecampus-mmi.vercel.app',
+  ];
+
   app.enableCors({
-    origin: [
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'https://ecampus-mmi.onrender.com',
-      'https://welizy.fr.yann.allain.mmi-velizy.fr',
-      'https://ecampus-mmi.vercel.app',
-    ],
+    origin: allowedOrigins,
     credentials: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });

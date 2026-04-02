@@ -5,6 +5,14 @@ import { admin } from 'better-auth/plugins';
 
 const prisma = new PrismaClient();
 
+const trustedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://ecampus-mmi.onrender.com',
+  'https://welizy.fr.yann.allain.mmi-velizy.fr',
+  'https://ecampus-mmi.vercel.app',
+];
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
@@ -67,13 +75,15 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
   },
+  advanced: {
+    useSecureCookies: true,
+    defaultCookieAttributes: {
+      sameSite: 'none',
+      secure: true,
+      httpOnly: true,
+    },
+  },
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_URL,
-  trustedOrigins: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://ecampus-mmi.onrender.com',
-    'https://welizy.fr.yann.allain.mmi-velizy.fr',
-    'https://ecampus-mmi.vercel.app',
-  ],
+  trustedOrigins,
 });
