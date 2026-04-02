@@ -569,6 +569,47 @@ export class DocumentsService {
     };
   }
 
+  async removeSpecificSubmission(
+    saeId: string,
+    submissionId: string,
+    requestingUserId: string,
+    requestingUserRole: UserRole,
+  ): Promise<void> {
+    const sae = await this.prisma.sae.findUnique({
+      where: { id: saeId, deletedAt: null },
+      select: {
+        createdById: true,
+        invitations: { select: { userId: true } },
+      },
+    });
+
+    if (!sae) {
+      throw new NotFoundException('SAE non trouvée');
+    }
+
+    const isAdmin = requestingUserRole === UserRole.ADMIN;
+    if (!isAdmin) {
+      this.assertCanWriteOnSae(
+        sae.createdById,
+        sae.invitations,
+        requestingUserId,
+      );
+    }
+
+    const submission = await this.prisma.studentSubmission.findUnique({
+      where: { id: submissionId },
+      select: { id: true, saeId: true },
+    });
+
+    if (!submission || submission.saeId !== saeId) {
+      throw new NotFoundException('Rendu non trouvé');
+    }
+
+    await this.prisma.studentSubmission.delete({
+      where: { id: submissionId },
+    });
+  }
+
   async updateAllPromotionSubmissionsVisibility(
     promotionId: string,
     isPublic: boolean,

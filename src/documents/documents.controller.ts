@@ -161,4 +161,21 @@ export class DocumentsController {
     );
     return { success: true, data };
   }
+
+  @Delete('submissions/:submissionId')
+  @UseGuards(AuthGuard, RolesGuard, OnboardingGuard)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  async removeSpecificSubmission(
+    @Param('saeId') saeId: string,
+    @Param('submissionId') submissionId: string,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<{ success: boolean; message: string }> {
+    await this.documentsService.removeSpecificSubmission(
+      saeId,
+      submissionId,
+      user.sub,
+      user.role,
+    );
+    return { success: true, message: 'Rendu supprimé avec succès' };
+  }
 }

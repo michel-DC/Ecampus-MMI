@@ -951,6 +951,22 @@ Les routes d'authentification de base sont gérées par Better Auth.
 }
 ```
 
+### 33bis. Supprimer un Rendu Spécifique
+
+- **Méthode** : DELETE
+- **URL** : /api/saes/:saeId/submissions/:submissionId
+- **Rôle** : TEACHER (propriétaire/invité), ADMIN
+- **Sécurité** : AuthGuard, RolesGuard, OnboardingGuard
+- **Description** : Supprime un rendu précis d'une SAE. Un professeur ne peut le faire que pour une SAE qu'il possède ou sur laquelle il est invité.
+- **Réponse** (200 OK) :
+
+```json
+{
+  "success": true,
+  "message": "Rendu supprimé avec succès"
+}
+```
+
 ### 34. Modifier la Visibilité de Tous les Rendus d'une Promotion
 
 - **Méthode** : PATCH
