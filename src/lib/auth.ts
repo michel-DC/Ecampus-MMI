@@ -74,5 +74,6 @@ export const auth = betterAuth({
     'http://localhost:3000',
     'https://ecampus-mmi.onrender.com',
     'https://welizy.fr.yann.allain.mmi-velizy.fr',
+    'https://ecampus-mmi.vercel.app',
   ],
 });
